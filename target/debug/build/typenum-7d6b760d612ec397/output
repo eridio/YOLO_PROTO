@@ -1,0 +1,2 @@
+cargo:rustc-env=TYPENUM_BUILD_CONSTS=/home/flo/Desktop/RUST/helloworld/target/debug/build/typenum-7d6b760d612ec397/out/consts.rs
+cargo:rustc-env=TYPENUM_BUILD_OP=/home/flo/Desktop/RUST/helloworld/target/debug/build/typenum-7d6b760d612ec397/out/op.rs

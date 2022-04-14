@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+
+<body>
+    <script>
+        window.onload = () => {
+  const navigator = document.querySelector(
+    ".container .banner .login-signup .navigator"
+  );
+  const navigatorBtn = document.querySelector(
+    ".container .banner .login-signup .navigator button"
+  );
+  const loginForm = document.querySelector(
+    ".container .banner .login-signup .login-form"
+  );
+  const signupForm = document.querySelector(
+    ".container .banner .login-signup .signup-form"
+  );
+
+  navigatorBtn.addEventListener("click", (e) => {
+    if (loginForm.classList.contains("active")) {
+      navigator.style.right = "70%";
+      e.target.innerHTML = "Login";
+      loginForm.classList.remove("active");
+      signupForm.classList.add("active");
+    } else {
+      e.target.innerHTML = "Sign Up";
+      signupForm.classList.remove("active");
+      loginForm.classList.add("active");
+      navigator.style.right = "0";
+    }
+  });
+};
+
+    </script> 
+    <link rel="stylesheet" href="style_index.css" />
+
+    <div class="container">
+        <div class="banner">
+     
+          <div class="login-signup">
+            <div class="navigator">
+              <button>Sign Up</button>
+            </div>
+            <div class="login-form active">
+              <h1>Login</h1>
+              <form class="loginForm" action="https://127.0.0.1:4201/signin" method="post" >
+                <div class="form-group">
+                    <input type="username" id="username" name="username" placeholder="username">
+                </div>
+                <div class="form-group">
+                    <input type="password" id="password" name="password" placeholder="password">
+                </div>
+                <button type="submit" value="Submit">
+                  Login
+                </button>
+              </form>
+            </div>
+            <div class="signup-form">
+              <h1>Sign Up</h1>
+              <form class="signupForm" action="https://127.0.0.1:4201/signup" method="post" >
+                <div class="form-group">
+                  <input type="text" name="username" placeholder="Username" />
+                </div>
+                <div class="form-group">
+                  <input type="full_name" name="full_name" placeholder="full name" />
+                </div>
+                <div class="form-group">
+                  <input type="password" id="password" name="password" placeholder="Password" />
+                </div>
+                
+                <button type="submit">Sign Up</button>
+              </form>
+            </div>
+          </div>
+      
+        </div>
+      </div>
+</body>
+</html>

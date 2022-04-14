@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>"Signal protocol implementation</title>
+    <link type="style" src="./style.css">
+
+
+    <script type="module">
+        
+      import init, {key_init_alice, key_init_bob,calculate_master_key_alice, calculate_master_key_bob, alice_init_ratchet,bob_init_ratchet, decrypt, send} from './pkg/helloworld.js'
+
+      async function run() {
+        await init()
+        document.body.textContent = helloworld()
+      }
+
+      function postBundle(json_to_send){
+        let xhr = new XMLHttpRequest();
+        xhr.open("POST", `http://localhost:4200/`, true);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.send(JSON.stringify(json_to_send));
+      }
+
+      async function init_alice(){
+        await init()
+        let init_alice = key_init_alice()
+        let json = JSON.parse(init_alice)
+
+        localStorage.setItem("alice_bundle" , JSON.stringify(json))
+        let bundle_complete = localStorage.getItem("alice_bundle")
+        
+        //console.log(JSON.parse(bundle_complete).bundle_keep)
+
+       console.log(json.bundle_server)
+        postBundle(json.bundle_server)
+       console.log("INIT DONE")
+
+      }
+      async function init_bob(){
+        await init()
+        let init_bob = key_init_bob()
+        let json = JSON.parse(init_bob)
+        localStorage.setItem("bob_bundle" , JSON.stringify(json))
+       // console.log(json.bundle_keep)
+       postBundle(json.bundle_server)
+       console.log("INIT DONE")
+      }
+
+      async function master_key_alice(){
+        await init()
+        let alice_local = JSON.parse(localStorage.getItem("alice_bundle"))
+        let bob_server = JSON.parse(localStorage.getItem("bob_bundle"))
+        // console.log(alice_local)
+        // console.log(bob_server)
+        //console.log(JSON.stringify(alice_local.bundle_keep))
+
+        //console.log(JSON.stringify(bob_server.bundle_server))
+        let master_key_alice_part = calculate_master_key_alice(JSON.stringify(bob_server.bundle_server),JSON.stringify(alice_local.bundle_keep))
+        console.log(master_key_alice_part)
+        localStorage.setItem("master_key_alice_part",master_key_alice_part)
+        // let json = JSON.parse(master_key_alice_part)
+        // console.log(json)
+      }
+      async function master_key_bob(){
+        await init()
+        let alice_local = JSON.parse(localStorage.getItem("alice_bundle"))
+        let bob_server = JSON.parse(localStorage.getItem("bob_bundle"))
+        // console.log(alice_local)
+        // console.log(bob_server)
+        //console.log(JSON.stringify(alice_local.bundle_keep))
+
+        //console.log(JSON.stringify(bob_server.bundle_server))
+        let master_key_bob_part = calculate_master_key_bob(JSON.stringify(bob_server.bundle_keep),JSON.stringify(alice_local.bundle_server))
+        console.log(master_key_bob_part)
+        localStorage.setItem("master_key_bob_part",master_key_bob_part)
+        // let json = JSON.parse(master_key_alice_part)
+        // console.log(json)
+      }
+
+      async function bob_init_ratchet_js(){
+        await init()
+        let sk = localStorage.getItem("master_key_bob_part")
+        let ratchetAndPubKeyBob = bob_init_ratchet(sk)
+        let json = JSON.parse(ratchetAndPubKeyBob)
+        console.log(json)
+        localStorage.setItem("bob_ratchet_string",json.ratchet)
+        localStorage.setItem("bob_pub_key_from_ratchet" , json.pub_key)
+      }
+
+      async function alice_init_ratchet_js(){
+        await init()
+        let sk = localStorage.getItem("master_key_alice_part")
+        let public_key_bob = localStorage.getItem("bob_pub_key_from_ratchet")
+        let ratchetAlice = alice_init_ratchet(sk,public_key_bob)
+        let json = JSON.parse(ratchetAlice)
+
+        console.log(json)
+        localStorage.setItem("alice_ratchet",json)
+        
+      }
+
+      async function alice_send_js(message){
+
+        await init()
+        let alice_ratchet = localStorage.getItem("alice_ratchet")
+        let ratchet_and_message_bundle = send(alice_ratchet, message)
+        let json = JSON.parse(ratchet_and_message_bundle)
+        localStorage.setItem("alice_ratchet",json.ratchet)
+        console.log(json.message_bundle)
+
+        let bob_ratchet = localStorage.getItem("bob_ratchet_string")
+        let steuplémarche = decrypt(bob_ratchet, json.message_bundle)
+        let json2 = JSON.parse(steuplémarche)
+        localStorage.setItem("bob_ratchet_string",json2.ratchet)
+        console.log(json2.decrypted)
+
+        document.getElementById("message_display").innerHTML += `<p style="float: right;">${json2.decrypted}</p> </br>`
+    
+      }
+
+      async function bob_send_js(message){
+
+        await init()
+        let bob_ratchet = localStorage.getItem("bob_ratchet_string")
+        let ratchet_and_message_bundle = send(bob_ratchet, message)
+        let json = JSON.parse(ratchet_and_message_bundle)
+        localStorage.setItem("bob_ratchet_string",json.ratchet)
+        console.log(json.message_bundle)
+
+        let alice_ratchet = localStorage.getItem("alice_ratchet")
+        let steuplémarche = decrypt(alice_ratchet, json.message_bundle)
+        let json2 = JSON.parse(steuplémarche)
+        localStorage.setItem("alice_ratchet",json2.ratchet)
+        console.log(json2.decrypted)
+        document.getElementById("message_display").innerHTML += `<p>${json2.decrypted}</p> </br>`
+       
+        }
+
+
+
+
+
+
+       var myElem = document.getElementById("alice_init")
+            myElem.onclick = function() {
+              init_alice()
+	 
+      }
+      var myElembob = document.getElementById("bob_init")
+            myElembob.onclick = function() {
+              init_bob() 
+      }
+      var masterKeyAliceInit = document.getElementById("alice_calcul_master")
+          masterKeyAliceInit.onclick = function() {
+              master_key_alice() 
+      }
+
+      var masterKeyBobInit = document.getElementById("bob_calcul_master")
+          masterKeyBobInit.onclick = function() {
+              master_key_bob() 
+      }
+
+      var message_bob = document.getElementById("bob_send_message")
+          message_bob.onclick = function() {
+              let message = (document.getElementById("message_bob").value) 
+              bob_send_js(message)
+      }
+
+      var message_alice = document.getElementById("alice_send_message")
+          message_alice.onclick = function() {
+              let message = (document.getElementById("message_alice").value) 
+             // console.log(message)
+              alice_send_js(message)
+      }
+
+      var bob_init_le_ratchet = document.getElementById("bob_init_ratchet")
+      bob_init_le_ratchet.onclick = function() {
+              bob_init_ratchet_js()
+      }
+      var alice_init_le_ratchet = document.getElementById("alice_init_ratchet")
+      alice_init_le_ratchet.onclick = function() {
+              alice_init_ratchet_js()
+      }
+      
+      var tout = document.getElementById("tout")
+      tout.onclick = async function() {
+        await init_bob()
+        await init_alice()
+        await master_key_bob()
+        await master_key_alice()
+        await bob_init_ratchet_js()
+        await alice_init_ratchet_js()
+      }
+
+    </script>
+  </head>
+
+  <body>
+
+
+    <button id="bob_init" >init bob key</button>
+    <button id="alice_init" style="float: right;">init alice key</button>
+    
+    <button id="bob_calcul_master" >MASTER KEY!!</button>
+    <button id="alice_calcul_master" style="float: right;">MASTER KEY!!</button>
+
+    <input id="message_bob" placeholder="bob message"></input>
+    <input id="message_alice" placeholder="message alice" style="float: right;"></input>
+    
+    <button id="bob_send_message">ENVOI</button>
+    <button id="alice_send_message" style="float: right;">ENVOI</button>
+
+    <button id="bob_init_ratchet" >INIT RATCHET EN 1</button>
+    <button id="alice_init_ratchet" style="float: right;">INIT RATCHET EN 2</button>
+
+    <button id="tout" style="margin: 0;
+                            position: absolute;
+                            top: 50%;
+                            left: 10%;
+                            "> TOUT</button>
+
+    <!-- <input id="pass" type="text">
+    <button id="pass_but">derive</button> 
+     -->
+
+     <div id="message_display" style="margin: auto;
+          width: 50%;
+          height: 80vh;
+          border: 3px solid rgb(42, 5, 211);
+          padding: 10px;">
+     </div>
+  </body>
+</html>
