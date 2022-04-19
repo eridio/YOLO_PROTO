@@ -423,8 +423,8 @@ function parseData_get_your_name(response) {
 
           dataChannel.addEventListener("open", ev => {
             init_alice()
-            delay(1000)
-            calculate_master_key_alice()
+            // delay(1000)
+            //await calculate_master_key_alice()
               const readyState = dataChannel.readyState;
               console.log("Send channel state is: " + readyState);
               sendMessage(dataChannel, "coucou bro 2");
@@ -479,8 +479,7 @@ function parseData_get_your_name(response) {
 
               //callee INIT KEY
               init_bob()
-              delay(1000)
-              calculate_master_key_bob()
+              //calculate_master_key_bob()
 
 
               console.log("datachannel ? : ");
@@ -501,9 +500,10 @@ function parseData_get_your_name(response) {
               if (event.candidate != null) {
                   console.log("ice candidate found");
                   console.log(event.candidate);
-                  socket.emit("request", { type: 'iceCandidateToCaller', name: callee, candidate: event.candidate });
+                  socket.emit("request", { type: 'iceCandidateToCaller', name: caller, candidate: event.candidate });
               }
           });
+         
           //Creating the callee sdp answer 
           var calleeSdp = await pcCallee.createAnswer();
           pcCallee.setLocalDescription(calleeSdp);

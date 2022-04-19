@@ -25,7 +25,6 @@ function lookForUserSocketId(name) {
   }
   return null;
 }
-
 function getUsersNames() {
   let usersNames = new Array();
   for (let i = 0; i < users.length; i++) {
@@ -137,11 +136,11 @@ io.on('connection', (socket) => {
       case "iceCandidateToCaller":
 
         //Get the recipient socketId
-        let recipientSocketId6 = lookForUserSocketId(msg.name);
+         recipientSocketId = lookForUserSocketId(msg.name);
         //send the iceCandidate to the recipient 
-        if (msg.name != null && recipientSocketId6 != null) {
+        if (msg.name != null && recipientSocketId != null) {
           console.log(msg.candidate);
-          io.to(recipientSocketId6).emit("calleeIceCandidate", msg.candidate);
+          io.to(recipientSocketId).emit("calleeIceCandidate", msg.candidate);
         }
 
         break;
