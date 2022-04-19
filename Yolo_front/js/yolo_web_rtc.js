@@ -95,7 +95,7 @@ function messageReceive(dataChannel) {
                     </div>
             </div>
         </div>
-        `;
+        `;//event message if event.data == "<!pubKey>="
     });
 }
 function sendMessage(dataChannel, message) {
@@ -246,6 +246,9 @@ socket.on("calleeSdp", async calleeSdp => {
     });
 
     dataChannel.addEventListener("open", ev => {
+
+        //caller init key
+
         const readyState = dataChannel.readyState;
         console.log("Send channel state is: " + readyState);
         sendMessage(dataChannel, "coucou bro 2");
@@ -298,11 +301,12 @@ socket.on("pcOffer", async (callerSdp, dc) => {
     pcCallee.addEventListener("datachannel", ev => {
         dataChannel = ev.channel;
 
+        //callee INIT KEY
         console.log("datachannel ? : ");
         console.log(dataChannel);
-
+        //RATCHET INIT COTE BOB -> pub key send
         sendMessage(dataChannel, "coucou bro");
-        messageReceive(dataChannel);
+        messageReceive(dataChannel); //si ca commence par ""
 
     }, false);
     //messageReceive(dataChannel);
