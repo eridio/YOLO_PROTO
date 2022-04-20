@@ -14,7 +14,7 @@
   <script type="module">
         
     import init, {key_init_alice, key_init_bob,calculate_master_key_alice, calculate_master_key_bob, alice_init_ratchet,bob_init_ratchet, decrypt, send} from './pkg/helloworld.js'
-
+    localStorage.clear();
     async function run() {
         await init()
         document.body.textContent = helloworld()
@@ -25,18 +25,20 @@
         xhr.open("POST", `http://localhost:4200/stock_bundle`, true);
         xhr.setRequestHeader("Content-Type", "application/json");
         xhr.send(JSON.stringify(json_to_send));
+        //console.log(json_to_send)
       }
      async function getBundleof(username){
-        let json_to_send = `{"name_" : "${username}"}`
+        let json_to_send = JSON.stringify({"name_" : username})
+        console.log(json_to_send)
         let xhr = new XMLHttpRequest();
         xhr.open("POST", `http://localhost:4200/get_bundle_of`, true);
         xhr.setRequestHeader("Content-Type", "application/json");
         xhr.send((json_to_send));
-        xhr.onload = () => {
+        xhr.onload = async () => {
         if (xhr.readyState === 4) {
             if (xhr.status === 200) {
                 console.log(xhr.statusText);
-                parseData(xhr.responseText);
+                await parseData(xhr.responseText);
             } else {
                 console.error(xhr.statusText);
             }
@@ -51,8 +53,8 @@
      
     function parseData(response) {
       
-        console.log(JSON.parse(response))
-        localStorage.setItem("bundle_from_server",response)
+        console.log("response du serveur de kdc" + JSON.parse(response))
+        localStorage.setItem("bundle_from_server",JSON.stringify(response))
     }
     
     async function init_alice(){
@@ -66,7 +68,7 @@
         
         //console.log(JSON.parse(bundle_complete).bundle_keep)
     
-       console.log(json.bundle_server)
+       //console.log(json.bundle_server)
         postBundle(json.bundle_server)
        console.log("INIT DONE")
     
@@ -85,10 +87,9 @@
         await init()
         let alice_local = JSON.parse(localStorage.getItem("alice_bundle"))
         let bob_from_server = await getBundleof("bob")
-       
+        console.log("master_key_alice  apres le get bob server")
         let bob_server = JSON.parse(localStorage.getItem("bundle_from_server"))
-       
-
+        
         let master_key_alice_part = calculate_master_key_alice(JSON.stringify(bob_server),JSON.stringify(alice_local.bundle_keep))
         console.log(master_key_alice_part)
         localStorage.setItem("master_key_alice_part",master_key_alice_part)
@@ -97,15 +98,14 @@
       }
       async function master_key_bob(){
         await init()
-        let alice_bundle_from_server = await getBundleof("alice")
+        let alice_bundle_from_server = await getBundleof("Alice")
+        console.log(alice_bundle_from_server)
         let alice_from_server = JSON.parse(localStorage.getItem("bundle_from_server"))
         let bob_local = JSON.parse(localStorage.getItem("bob_bundle"))
-        // console.log(alice_local)
-        // console.log(bob_server)
-        //console.log(JSON.stringify(alice_local.bundle_keep))
-    
-        //console.log(JSON.stringify(bob_server.bundle_server))
-        let master_key_bob_part = calculate_master_key_bob(JSON.stringify(bob_local.bundle_keep),JSON.stringify(alice_from_server.bundle_server))
+        console.log("BUNDLE ALICE RECUP DU SERVEUR PAR BOB DANS MASTER KEY BOB " +  localStorage.getItem("bundle_from_server"))
+
+
+        let master_key_bob_part = calculate_master_key_bob(JSON.stringify(bob_local.bundle_keep),JSON.stringify(alice_from_server))
         console.log(master_key_bob_part)
         localStorage.setItem("master_key_bob_part",master_key_bob_part)
         // let json = JSON.parse(master_key_alice_part)
@@ -229,6 +229,14 @@ function parseData_get_your_name(response) {
 //BOB = CALLEE
 
 
+function changeWhiteSpacesIntoUnderscore(word) {
+    word = word.replace(/\s+/g, '_');
+    return word;
+}
+function changeUnderscoreIntoWhiteSpaces(word) {
+    word = word.replace('_', ' ');
+    return word;
+}
       var userList = new Array();
       var callee;
       var options = {
@@ -297,7 +305,7 @@ function parseData_get_your_name(response) {
               <div class="modal-dialog">
                 <div class="modal-content">
                   <header class="modalContainer"> Offer By ${senderName}</header>
-                  <button class=acceptButton id=${senderName}>Accept offer send by:${senderName}</button>          
+                  <button class=acceptButton id=${changeWhiteSpacesIntoUnderscore(senderName)}>Accept offer send by:${senderName}</button>          
                 </div >
               `;
       }
@@ -350,7 +358,7 @@ function parseData_get_your_name(response) {
      
       socket.on("newUser", user => {
           addUsers(user);
-          console.log(user);
+          //console.log(user);
       });
 
       socket.on("connectedUsers", usersAlreadyConnected => {
@@ -366,7 +374,7 @@ function parseData_get_your_name(response) {
           //création sdp et envoi de sdp puis de ICE
           //côté caller
           callee = receiverName;
-          console.log("Connexion accepté de :" + receiverName);
+          //console.log("Connexion accepté de :" + receiverName);
 
           //Creating the caller peer connection and his sdp
           if (pcCaller == undefined) {
@@ -377,11 +385,11 @@ function parseData_get_your_name(response) {
 
 
           pcCaller.addEventListener('connectionstatechange', event => {
-              console.log("connection ?")
+              //console.log("connection ?")
               if (pcCaller.connectionState === 'connected') {
                   // Peers connected!
                   messageReceive(dataChannel);
-                  console.log("GGWP peers connected!");
+                  //console.log("GGWP peers connected!");
               }
           });
 
@@ -397,10 +405,10 @@ function parseData_get_your_name(response) {
       socket.on("calleeSdp", async calleeSdp => {
           //Caller set callee description
           const remoteDesc = new RTCSessionDescription(calleeSdp);
-          console.log(pcCaller.iceGatheringState);
+         // console.log(pcCaller.iceGatheringState);
           await pcCaller.setRemoteDescription(remoteDesc);
-          console.log("callee descripiton set");
-          console.log(remoteDesc);
+          //console.log("callee descripiton set");
+          //console.log(remoteDesc);
 
           //navigator.mediaDevices.getUserMedia({ audio: true, video: true });
           //pcCaller.addStream(localStream);
@@ -408,29 +416,30 @@ function parseData_get_your_name(response) {
           //Then 
           //Caller listen to his peerconnection for some icecandidate and when one is found the caller send it to the callee 
 
-          console.log(pcCaller.iceGatheringState);
+          //console.log(pcCaller.iceGatheringState);
 
 
 
           pcCaller.addEventListener('icecandidate', event => {
 
               if (event.candidate != null) {
-                  console.log("ice candidate found");
-                  console.log(event.candidate);
+                  //console.log("ice candidate found");
+                  //console.log(event.candidate);
                   socket.emit("request", { type: 'iceCandidateToCallee', name: callee, candidate: event.candidate });
               }
           });
 
-          dataChannel.addEventListener("open", ev => {
-            init_alice()
+          //-------------------------------------------------------INIT----------------------------
+          dataChannel.addEventListener("open",async ev => {
+            await init_alice()
             // delay(1000)
-            //await calculate_master_key_alice()
+            await master_key_alice()
               const readyState = dataChannel.readyState;
-              console.log("Send channel state is: " + readyState);
+              //console.log("Send channel state is: " + readyState);
               sendMessage(dataChannel, "coucou bro 2");
           });
           dataChannel.addEventListener("error", ev => {
-              console.log(ev);
+              //console.log(ev);
           });
 
 
@@ -445,12 +454,12 @@ function parseData_get_your_name(response) {
 
 
       socket.on('calleeIceCandidate', async calleeIceCandidate => {
-          console.log(calleeIceCandidate);
+          //console.log(calleeIceCandidate);
           if (calleeIceCandidate) {
               //Try to add the caller ice candidate 
               try {
                   await pcCaller.addIceCandidate(calleeIceCandidate);
-                  console.log("callee ice cadidate added");
+                 // console.log("callee ice cadidate added");
               } catch (e) {
                   console.error('Error adding received ice candidate', e);
               }
@@ -462,7 +471,7 @@ function parseData_get_your_name(response) {
 
       // callee received an offer from the caller 
       socket.on("offer", senderName => {
-          console.log("Demande de connexion de:" + senderName);
+          //console.log("Demande de connexion de:" + senderName);
           displayOffer(senderName);
           //cells.innerHTML += `<button class=acceptButton id = ${senderName}> Accept offer send by:${senderName}</button >`;
       });
@@ -474,16 +483,16 @@ function parseData_get_your_name(response) {
           pcCallee = new RTCPeerConnection();
           // dataChannel = dc;
           // console.log(dc);
-          pcCallee.addEventListener("datachannel", ev => {
+          pcCallee.addEventListener("datachannel", async ev => {
               dataChannel = ev.channel;
 
               //callee INIT KEY
-              init_bob()
-              //calculate_master_key_bob()
+              await init_bob()
+              await master_key_bob()
 
 
-              console.log("datachannel ? : ");
-              console.log(dataChannel);
+              //console.log("datachannel ? : ");
+              //console.log(dataChannel);
               //RATCHET INIT COTE BOB -> pub key send
               //sendMessage(dataChannel, "");
               messageReceive(dataChannel); //si ca commence par ""
@@ -492,14 +501,14 @@ function parseData_get_your_name(response) {
           //messageReceive(dataChannel);
           //Setting the caller sdp description
           await pcCallee.setRemoteDescription(callerSdp);
-          console.log("caller description set:");
-          console.log(callerSdp);
+        //  console.log("caller description set:");
+          //console.log(callerSdp);
 
           pcCallee.addEventListener('icecandidate', event => {
 
               if (event.candidate != null) {
-                  console.log("ice candidate found");
-                  console.log(event.candidate);
+                 // console.log("ice candidate found");
+                 // console.log(event.candidate);
                   socket.emit("request", { type: 'iceCandidateToCaller', name: caller, candidate: event.candidate });
               }
           });
@@ -515,12 +524,12 @@ function parseData_get_your_name(response) {
 
       //Signaling server emiting caller ice candidate 
       socket.on('callerIceCandidate', async callerIceCandidate => {
-          console.log(callerIceCandidate);
+         // console.log(callerIceCandidate);
           if (callerIceCandidate) {
               //Try to add the caller ice candidate 
               try {
                   await pcCallee.addIceCandidate(callerIceCandidate);
-                  console.log("caller ice cadidate added");
+                 // console.log("caller ice cadidate added");
               } catch (e) {
                   console.error('Error adding received ice candidate', e);
               }
@@ -544,15 +553,15 @@ function parseData_get_your_name(response) {
           if (e.target && e.target.className == 'offerButton') {
               //Caller sending his offer to the callee 
               socket.emit("request", { type: "offer", name: e.target.id });
-              console.log(e.target.id);
+             // console.log(e.target.id);
           }
           if (e.target && e.target.className == 'acceptButton') {
-              console.log(e.target);
+             // console.log(e.target);
               let divModal = document.getElementById("offer").style.display = "none";
               //callee accepted the offer and sending back his answer to the caller 
-              socket.emit("request", { type: "answer", name: e.target.id });
-              console.log(e.target.id);
-              caller = e.target.id;
+              socket.emit("request", { type: "answer", name:changeUnderscoreIntoWhiteSpaces(e.target.id) });
+             // console.log(changeUnderscoreIntoWhiteSpaces(e.target.id));
+              caller = changeUnderscoreIntoWhiteSpaces(e.target.id);
           }
 
       });
