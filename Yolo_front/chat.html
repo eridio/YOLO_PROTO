@@ -433,10 +433,11 @@ function changeUnderscoreIntoWhiteSpaces(word) {
           dataChannel.addEventListener("open",async ev => {
             await init_alice()
             // delay(1000)
-            await master_key_alice()
+            //await master_key_alice()
               const readyState = dataChannel.readyState;
               //console.log("Send channel state is: " + readyState);
               sendMessage(dataChannel, "coucou bro 2");
+              messageReceive(dataChannel)
           });
           dataChannel.addEventListener("error", ev => {
               //console.log(ev);
@@ -483,12 +484,12 @@ function changeUnderscoreIntoWhiteSpaces(word) {
           pcCallee = new RTCPeerConnection();
           // dataChannel = dc;
           // console.log(dc);
-          pcCallee.addEventListener("datachannel", async ev => {
+          pcCallee.addEventListener("datachannel", ev => {
               dataChannel = ev.channel;
 
               //callee INIT KEY
-              await init_bob()
-              await master_key_bob()
+             //await init_bob()
+             // await master_key_bob()
 
 
               //console.log("datachannel ? : ");
