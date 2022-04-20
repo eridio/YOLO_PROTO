@@ -21,24 +21,30 @@
       }
     
      async function postBundle(json_to_send){
+     // let json = JSON.stringify(json_to_send)
+      console.log("POST BUNDLE" + JSON.stringify(json_to_send))
+
+
         let xhr = new XMLHttpRequest();
         xhr.open("POST", `http://localhost:4200/stock_bundle`, true);
         xhr.setRequestHeader("Content-Type", "application/json");
-        xhr.send(JSON.stringify(json_to_send));
-        //console.log(json_to_send)
+        xhr.send((JSON.stringify(json_to_send)));
+        //console.log("json to send POST BUNDLE" + JSON.parse(json_to_send))
       }
      async function getBundleof(username){
         let json_to_send = JSON.stringify({"name_" : username})
-        console.log(json_to_send)
+        
         let xhr = new XMLHttpRequest();
         xhr.open("POST", `http://localhost:4200/get_bundle_of`, true);
         xhr.setRequestHeader("Content-Type", "application/json");
         xhr.send((json_to_send));
-        xhr.onload = async () => {
+        xhr.onload = () => {
         if (xhr.readyState === 4) {
             if (xhr.status === 200) {
-                console.log(xhr.statusText);
-                await parseData(xhr.responseText);
+                console.log(" statusText : " + xhr.statusText);
+                localStorage.setItem("bundle_from_server" , xhr.responseText)
+                //await parseData(xhr.responseText);
+
             } else {
                 console.error(xhr.statusText);
             }
@@ -52,9 +58,8 @@
       }
      
     function parseData(response) {
-      
-        console.log("response du serveur de kdc" + JSON.parse(response))
-        localStorage.setItem("bundle_from_server",JSON.stringify(response))
+        
+        localStorage.setItem("bundle_from_server",(response))
     }
     
     async function init_alice(){
@@ -67,43 +72,56 @@
         let bundle_complete = localStorage.getItem("alice_bundle")
         
         //console.log(JSON.parse(bundle_complete).bundle_keep)
-    
-       //console.log(json.bundle_server)
-        postBundle(json.bundle_server)
+       
+        postBundle(JSON.parse(bundle_complete).bundle_server)
        console.log("INIT DONE")
     
       }
-      async function init_bob(){
+    async function init_bob(){
         await init()
         let init_bob = key_init_bob()
         let json = JSON.parse(init_bob)
         localStorage.setItem("bob_bundle" , JSON.stringify(json))
-       // console.log(json.bundle_keep)
+       //console.log("init bob json bundle " + JSON.stringify(json.bundle_server))
        postBundle(json.bundle_server)
        console.log("INIT DONE")
       }
     
       async function master_key_alice(){
         await init()
-        let alice_local = JSON.parse(localStorage.getItem("alice_bundle"))
-        let bob_from_server = await getBundleof("bob")
-        console.log("master_key_alice  apres le get bob server")
+        
+        await delay(1000) //change to listen to storage change
+
+        await getBundleof("bob")
+
+        await delay(1000) //change to listen to storage change
+
+       // console.log("master_key_alice  apres le get bob server")
         let bob_server = JSON.parse(localStorage.getItem("bundle_from_server"))
+        let alice_local = JSON.parse(localStorage.getItem("alice_bundle"))
+
+
+        console.log("BOB FROM SERVER : " + localStorage.getItem("bundle_from_server"))
         
         let master_key_alice_part = calculate_master_key_alice(JSON.stringify(bob_server),JSON.stringify(alice_local.bundle_keep))
         console.log(master_key_alice_part)
         localStorage.setItem("master_key_alice_part",master_key_alice_part)
+
+
         // let json = JSON.parse(master_key_alice_part)
         // console.log(json)
       }
       async function master_key_bob(){
         await init()
-        let alice_bundle_from_server = await getBundleof("Alice")
-        console.log(alice_bundle_from_server)
+        await delay(1000)
+
+        await getBundleof("Alice")
+        
+        await delay(1000) //change to listen to storage change
         let alice_from_server = JSON.parse(localStorage.getItem("bundle_from_server"))
         let bob_local = JSON.parse(localStorage.getItem("bob_bundle"))
-        console.log("BUNDLE ALICE RECUP DU SERVEUR PAR BOB DANS MASTER KEY BOB " +  localStorage.getItem("bundle_from_server"))
-
+        
+        console.log("ALICE FROM SERVER  :"   + localStorage.getItem("bundle_from_server"))
 
         let master_key_bob_part = calculate_master_key_bob(JSON.stringify(bob_local.bundle_keep),JSON.stringify(alice_from_server))
         console.log(master_key_bob_part)
@@ -149,7 +167,7 @@
         localStorage.setItem("bob_ratchet_string",json2.ratchet)
         console.log(json2.decrypted)
     
-        document.getElementById("message_display").innerHTML += `<p style="float: right;">${json2.decrypted}</p> </br>`
+        //document.getElementById("message_display").innerHTML += `<p style="float: right;">${json2.decrypted}</p> </br>`
     
       }
     
@@ -195,9 +213,9 @@ async function oninit(){
 
 function get_your_name() {
     let xhr = new XMLHttpRequest();
-    let cookie_to_send = document.cookie.substring(4,200);
+    //let cookie_to_send = document.cookie.substring(4,200);
     xhr.open("GET", `https://127.0.0.1:4201/get_your_name`, true);
-    xhr.setRequestHeader( "Authorization","Bearer " + cookie_to_send );
+  //  xhr.setRequestHeader( "Authorization","Bearer " + cookie_to_send );
     xhr.onload = () => {
         if (xhr.readyState === 4) {
             if (xhr.status === 200) {
@@ -217,7 +235,7 @@ let username;
 let msg;
 function parseData_get_your_name(response) {
     let json_received = JSON.parse(response);
-    console.log(json_received)
+    //console.log(json_received)
     username = json_received.full_name; 
     userName = username
     
@@ -433,7 +451,7 @@ function changeUnderscoreIntoWhiteSpaces(word) {
           dataChannel.addEventListener("open",async ev => {
             await init_alice()
             // delay(1000)
-            //await master_key_alice()
+            master_key_alice()
               const readyState = dataChannel.readyState;
               //console.log("Send channel state is: " + readyState);
               sendMessage(dataChannel, "coucou bro 2");
@@ -488,8 +506,8 @@ function changeUnderscoreIntoWhiteSpaces(word) {
               dataChannel = ev.channel;
 
               //callee INIT KEY
-             //await init_bob()
-             // await master_key_bob()
+             init_bob()
+             master_key_bob()
 
 
               //console.log("datachannel ? : ");
