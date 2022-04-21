@@ -140,7 +140,7 @@
         let ratchetAndPubKeyBob = bob_init_ratchet(sk)
         let json = JSON.parse(ratchetAndPubKeyBob)
         console.log(json)
-        localStorage.setItem("bob_ratchet_string",json.ratchet)
+        localStorage.setItem("ratchet",json.ratchet)
         localStorage.setItem("bob_pub_key_from_ratchet" , json.pub_key)
       }
     
@@ -153,7 +153,7 @@
         let json = JSON.parse(ratchetAlice)
     
         console.log(json)
-        localStorage.setItem("alice_ratchet",json)
+        localStorage.setItem("ratchet",json)
 
       }
     
@@ -194,6 +194,24 @@
        
         }
     
+        async function send_signal_js(message)  {
+          await init()
+          let ratchet = localStorage.getItem("ratchet")
+          let ratchet_and_message_bundle = send(ratchet, message)
+          let json = JSON.parse(ratchet_and_message_bundle)
+          localStorage.setItem("ratchet",json.ratchet)
+          console.log(json.message_bundle)
+          dataChannel.send(json.message_bundle)
+        }
+        async function decrypt_signal_js(message_bundle){
+          await init()
+          let ratchet = localStorage.getItem("ratchet")
+          let decrytped_and_ratchet_returned = decrypt(ratchet, message_bundle)
+          let json = JSON.parse(decrytped_and_ratchet_returned)
+          localStorage.setItem("ratchet", json.ratchet)
+          console.log(json.decrypted)
+          return json.decrypted
+        }
         //init_alice()
         //master_key_alice()
     //########################################################-end of signal-#########################################
@@ -289,12 +307,16 @@ function changeUnderscoreIntoWhiteSpaces(word) {
 
 
       function messageReceive(dataChannel) {
-          dataChannel.addEventListener("message", event => {
+          dataChannel.addEventListener("message", async event => {
             if (event.data.slice(0,6) == '{"kty"'){
               localStorage.setItem("bob_pub_key_from_ratchet", event.data)
               alice_init_ratchet_js()
+              send_signal_js("init message signal")
             }
             else{
+              let ratchet = localStorage.getItem("ratchet")
+              let message_decrypted = await decrypt_signal_js(event.data)
+              console.log("Message decrypted : " + message_decrypted);
               console.log("Message received : " + event.data);
               let divMsg = document.getElementById("conversation");
               divMsg.innerHTML += `
@@ -302,18 +324,19 @@ function changeUnderscoreIntoWhiteSpaces(word) {
                   <div class="col-sm-12 message-main-receiver">
                       <div class="receiver">
                           <div class="message-text">
-                                  ${event.data}
+                                  ${message_decrypted}
                                   </div>
                           </div>
                   </div>
               </div>
-              `;//event message if event.data == "<!pubKey>="
+              `;
             }
           });
       }
       function sendMessage(dataChannel, message) {
           if (dataChannel.readyState == "open") {
-              dataChannel.send(message);
+            send_signal_js(message)
+            //  dataChannel.send(message);
               let divMsg = document.getElementById("conversation");
               divMsg.innerHTML += `
               <div class="row message-body">
@@ -465,7 +488,7 @@ function changeUnderscoreIntoWhiteSpaces(word) {
             master_key_alice()
               const readyState = dataChannel.readyState;
               //console.log("Send channel state is: " + readyState);
-              sendMessage(dataChannel, "coucou bro 2");
+              //sendMessage(dataChannel, "coucou bro 2");
               messageReceive(dataChannel)
           });
           dataChannel.addEventListener("error", ev => {
