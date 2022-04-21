@@ -126,13 +126,17 @@
         let master_key_bob_part = calculate_master_key_bob(JSON.stringify(bob_local.bundle_keep),JSON.stringify(alice_from_server))
         console.log(master_key_bob_part)
         localStorage.setItem("master_key_bob_part",master_key_bob_part)
+        
         // let json = JSON.parse(master_key_alice_part)
         // console.log(json)
       }
     
       async function bob_init_ratchet_js(){
         await init()
+        //await delay(1000)
         let sk = localStorage.getItem("master_key_bob_part")
+        await delay(1000)
+        console.log("sk recuperer du local storage" + sk)
         let ratchetAndPubKeyBob = bob_init_ratchet(sk)
         let json = JSON.parse(ratchetAndPubKeyBob)
         console.log(json)
@@ -142,6 +146,7 @@
     
       async function alice_init_ratchet_js(){
         await init()
+        //await delay(1000)
         let sk = localStorage.getItem("master_key_alice_part")
         let public_key_bob = localStorage.getItem("bob_pub_key_from_ratchet")
         let ratchetAlice = alice_init_ratchet(sk,public_key_bob)
@@ -149,7 +154,7 @@
     
         console.log(json)
         localStorage.setItem("alice_ratchet",json)
-        
+
       }
     
       async function alice_send_js(message){
@@ -285,6 +290,11 @@ function changeUnderscoreIntoWhiteSpaces(word) {
 
       function messageReceive(dataChannel) {
           dataChannel.addEventListener("message", event => {
+            if (event.data.slice(0,6) == '{"kty"'){
+              localStorage.setItem("bob_pub_key_from_ratchet", event.data)
+              alice_init_ratchet_js()
+            }
+            else{
               console.log("Message received : " + event.data);
               let divMsg = document.getElementById("conversation");
               divMsg.innerHTML += `
@@ -298,6 +308,7 @@ function changeUnderscoreIntoWhiteSpaces(word) {
                   </div>
               </div>
               `;//event message if event.data == "<!pubKey>="
+            }
           });
       }
       function sendMessage(dataChannel, message) {
@@ -502,12 +513,15 @@ function changeUnderscoreIntoWhiteSpaces(word) {
           pcCallee = new RTCPeerConnection();
           // dataChannel = dc;
           // console.log(dc);
-          pcCallee.addEventListener("datachannel", ev => {
+          pcCallee.addEventListener("datachannel",async ev => {
               dataChannel = ev.channel;
 
               //callee INIT KEY
-             init_bob()
-             master_key_bob()
+            init_bob()
+            await master_key_bob()
+            console.log(" master ?  "+localStorage.getItem("master_key_bob_part"))
+            await bob_init_ratchet_js()
+            dataChannel.send(localStorage.getItem("bob_pub_key_from_ratchet"))
 
 
               //console.log("datachannel ? : ");
