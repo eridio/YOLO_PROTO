@@ -65,9 +65,11 @@
     async function init_alice(){
         await init()
        // import('./../pkg/helloworld.js')
-        let init_alice = key_init_alice()
+       await delay(1000)
+       console.log("ALICE (caller) :->     " + username)
+        let init_alice = key_init_alice(username)
         let json = JSON.parse(init_alice)
-    
+      
         localStorage.setItem("alice_bundle" , JSON.stringify(json))
         let bundle_complete = localStorage.getItem("alice_bundle")
         
@@ -79,7 +81,9 @@
       }
     async function init_bob(){
         await init()
-        let init_bob = key_init_bob()
+        
+        console.log("BOB (callee) :->     " + username)
+        let init_bob = key_init_bob(username)
         let json = JSON.parse(init_bob)
         localStorage.setItem("bob_bundle" , JSON.stringify(json))
        //console.log("init bob json bundle " + JSON.stringify(json.bundle_server))
@@ -92,7 +96,7 @@
         
         await delay(1000) //change to listen to storage change
 
-        await getBundleof("bob")
+        await getBundleof(callee)//change to uuid from signalment server
 
         await delay(1000) //change to listen to storage change
 
@@ -115,7 +119,7 @@
         await init()
         await delay(1000)
 
-        await getBundleof("Alice")
+        await getBundleof(caller)
         
         await delay(1000) //change to listen to storage change
         let alice_from_server = JSON.parse(localStorage.getItem("bundle_from_server"))
@@ -260,6 +264,7 @@ function parseData_get_your_name(response) {
     let json_received = JSON.parse(response);
     //console.log(json_received)
     username = json_received.full_name; 
+    console.log(json_received.id)
     userName = username
     
     socket.emit("request", msg = { type: "login", name: userName });
@@ -308,6 +313,9 @@ function changeUnderscoreIntoWhiteSpaces(word) {
 
       function messageReceive(dataChannel) {
           dataChannel.addEventListener("message", async event => {
+            if (event.data == 'init message signal'){
+
+            }
             if (event.data.slice(0,6) == '{"kty"'){
               localStorage.setItem("bob_pub_key_from_ratchet", event.data)
               alice_init_ratchet_js()
@@ -540,6 +548,7 @@ function changeUnderscoreIntoWhiteSpaces(word) {
               dataChannel = ev.channel;
 
               //callee INIT KEY
+             
             init_bob()
             await master_key_bob()
             console.log(" master ?  "+localStorage.getItem("master_key_bob_part"))
@@ -548,7 +557,7 @@ function changeUnderscoreIntoWhiteSpaces(word) {
 
 
               //console.log("datachannel ? : ");
-              //console.log(dataChannel);
+              console.log(dataChannel);
               //RATCHET INIT COTE BOB -> pub key send
               //sendMessage(dataChannel, "");
               messageReceive(dataChannel); //si ca commence par ""

@@ -364,7 +364,7 @@ pub fn parse_bundle_arguments(s: String) -> Vec<u8> {
 
 //------------------------------------------alice------------------
 #[wasm_bindgen]
-pub fn key_init_alice() -> String{
+pub fn key_init_alice(caller : String) -> String{
     //1
     let ika = IdentityKey::default();
     let ikas = ika.strip();
@@ -378,7 +378,7 @@ pub fn key_init_alice() -> String{
     let otpkas = otpka.strip();
     //bundle a envoyer au server
     let bundle_alice_to_keep = IdentityStringify {
-        name_ : String::from("Alice"),
+        name_ : String::from(caller.clone()),
         ephemeral_key :format!("{:?}",eka.to_bytes()) ,
         identity_key: format!("{:?}",ika.to_bytes().clone()),
         signed_pre_key : format!("{:?}",spka.to_bytes().clone()),
@@ -387,7 +387,7 @@ pub fn key_init_alice() -> String{
     };
 
     let bundle_server = Identity {
-        name_ : String::from("Alice"),
+        name_ : String::from(caller),
 
         identity_key : ika.clone().strip().to_bytes(),
         signed_pre_key: spka.strip().to_bytes(),
@@ -516,7 +516,7 @@ pub fn bob_init_ratchet(sk :String) -> String {
 
 
 #[wasm_bindgen]
-pub fn key_init_bob()->String {
+pub fn key_init_bob(callee : String)->String {
 
     let ikb = IdentityKey::default();
     let ikbs = ikb.strip();
@@ -534,7 +534,7 @@ pub fn key_init_bob()->String {
     let signature = ikb.sign(&spkbs.pk_to_bytes());
     
     let bundle_bob_to_keep = IdentityStringify {
-        name_ : String::from("bob"),
+        name_ : String::from(callee.clone()),
         ephemeral_key : format!("{:?}", ekb.to_bytes()),
         identity_key: format!("{:?}",ikb.to_bytes().clone()),
         signed_pre_key : format!("{:?}",spkb.to_bytes().clone()),
@@ -543,7 +543,7 @@ pub fn key_init_bob()->String {
     };
 
     let bundle_server = Identity {
-        name_ : String::from("bob"),
+        name_ : String::from(callee),
         identity_key : ikb.clone().strip().to_bytes(),
         signed_pre_key: spkb.strip().to_bytes(),
         signature : (ikb.sign(&spkb.strip().pk_to_bytes()).as_ref()).to_vec(),
