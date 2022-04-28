@@ -26,7 +26,7 @@
 
 
         let xhr = new XMLHttpRequest();
-        xhr.open("POST", `http://localhost:4200/stock_bundle`, true);
+        xhr.open("POST", `https://yoloooo.com/stock_bundle`, true);
         xhr.setRequestHeader("Content-Type", "application/json");
         xhr.send((JSON.stringify(json_to_send)));
         //console.log("json to send POST BUNDLE" + JSON.parse(json_to_send))
@@ -35,7 +35,7 @@
         let json_to_send = JSON.stringify({"name_" : username})
         
         let xhr = new XMLHttpRequest();
-        xhr.open("POST", `http://localhost:4200/get_bundle_of`, true);
+        xhr.open("POST", `https://yoloooo.com/get_bundle_of`, true);
         xhr.setRequestHeader("Content-Type", "application/json");
         xhr.send((json_to_send));
         xhr.onload = () => {
@@ -94,7 +94,7 @@
       async function master_key_alice(){
         await init()
         
-        await delay(1000) //change to listen to storage change
+        await delay(3000) //change to listen to storage change
 
         await getBundleof(callee)//change to uuid from signalment server
 
@@ -117,7 +117,7 @@
       }
       async function master_key_bob(){
         await init()
-        await delay(1000)
+        await delay(3000)
 
         await getBundleof(caller)
         
@@ -241,7 +241,7 @@ async function oninit(){
 function get_your_name() {
     let xhr = new XMLHttpRequest();
     //let cookie_to_send = document.cookie.substring(4,200);
-    xhr.open("GET", `https://127.0.0.1:4201/get_your_name`, true);
+    xhr.open("GET", `https://yoloooo.com/get_your_name`, true);
   //  xhr.setRequestHeader( "Authorization","Bearer " + cookie_to_send );
     xhr.onload = () => {
         if (xhr.readyState === 4) {
@@ -415,7 +415,23 @@ function changeUnderscoreIntoWhiteSpaces(word) {
       //   console.log(contactList);
 
       };
-     
+      function deleteUser(user) {
+    for (let i = 0; i < userList.length; i++) {
+
+        if (userList[i] == user) {
+
+            userList.splice(i, 1);
+        }
+    }
+    let userToDelete = document.getElementById(user);
+    userToDelete.parentNode.removeChild(userToDelete);
+};
+
+socket.on("userLeave", user => {
+    deleteUser(user);
+    console.log(user);
+});
+
       socket.on("newUser", user => {
           addUsers(user);
           //console.log(user);
@@ -631,6 +647,10 @@ function changeUnderscoreIntoWhiteSpaces(word) {
 
       });
 
+
+    window.addEventListener('beforeunload', e => {
+    socket.emit("disconnect");
+    });
 
 
    </script>
