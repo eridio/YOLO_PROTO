@@ -11,8 +11,10 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  
   <script type="module">
-        
+       // import init from './pkg/helloword_bg.wasm';
+    import { send_crypted_message, extract_from_JSON } from "./js/index.js";
     import init, {key_init_alice, key_init_bob,calculate_master_key_alice, calculate_master_key_bob, alice_init_ratchet,bob_init_ratchet, decrypt, send} from './pkg/helloworld.js'
     localStorage.clear();
     async function run() {
@@ -57,7 +59,7 @@
         
       }
      
-    function parseData(response) {
+    function parseDataBundle(response) {
         
         localStorage.setItem("bundle_from_server",(response))
     }
@@ -98,9 +100,8 @@
 
         await getBundleof(callee)//change to uuid from signalment server
 
-        await delay(1000) //change to listen to storage change
+        await delay(1000) //change to listen to storage changesearch_friend
 
-       // console.log("master_key_alice  apres le get bob server")
         let bob_server = JSON.parse(localStorage.getItem("bundle_from_server"))
         let alice_local = JSON.parse(localStorage.getItem("alice_bundle"))
 
@@ -112,7 +113,6 @@
         localStorage.setItem("master_key_alice_part",master_key_alice_part)
 
 
-        // let json = JSON.parse(master_key_alice_part)
         // console.log(json)
       }
       async function master_key_bob(){
@@ -150,7 +150,7 @@
     
       async function alice_init_ratchet_js(){
         await init()
-        //await delay(1000)
+        await delay(1000)
         let sk = localStorage.getItem("master_key_alice_part")
         let public_key_bob = localStorage.getItem("bob_pub_key_from_ratchet")
         let ratchetAlice = alice_init_ratchet(sk,public_key_bob)
@@ -198,21 +198,62 @@
        
         }
     
-        async function send_signal_js(message)  {
+        async function send_signal_js(message,senderName,dataChannel)  {
           await init()
-          let ratchet = localStorage.getItem("ratchet")
+          let ratchet;
+          console.log("AVANT LE IF")
+          if(dataChannelList.length>0){
+            for (let i=0;i<dataChannelList.length;i++){
+                console.log("datachannel [i] =  " +dataChannelList[i])
+                if (dataChannelList[i].dataChannel==dataChannel){
+                  console.log("ratchet de la data channel:     "+dataChannelList[i].ratchet)
+                 ratchet=dataChannelList[i].ratchet;
+                }
+              }
+              console.log("RATCHET SEND SIGNAL JS :    "+ratchet)
+          }
+          else{
+            ratchet = localStorage.getItem("ratchet")
+            console.log("RATCHET SEND SIGNAL JS :    "+ratchet)
+          }
+          console.log("RATCHET + MESSAGE :"   + ratchet + "     " + message)
           let ratchet_and_message_bundle = send(ratchet, message)
           let json = JSON.parse(ratchet_and_message_bundle)
           localStorage.setItem("ratchet",json.ratchet)
+          for (let i=0;i<dataChannelList.length;i++){
+                if (dataChannelList[i].dataChannel==dataChannel){
+                  dataChannelList[i].ratchet=localStorage.getItem("ratchet");
+                }
+              }
+         
           console.log(json.message_bundle)
           dataChannel.send(json.message_bundle)
         }
-        async function decrypt_signal_js(message_bundle){
+        async function decrypt_signal_js(message_bundle,dataChannel){
           await init()
-          let ratchet = localStorage.getItem("ratchet")
+          let ratchet;
+          if (dataChannelList.length>0){
+            for (let i=0;i<dataChannelList.length;i++){
+                if (dataChannelList[i].dataChannel==dataChannel){
+                 ratchet=dataChannelList[i].ratchet;
+                }
+              }
+              console.log("RATCHET DECRYPT SIGNAL JS :    "+ratchet)
+          }
+          else{
+            ratchet = localStorage.getItem("ratchet");
+            console.log("RATCHET SEND SIGNAL JS :    "+ratchet)
+          }
+
+          //let ratchet = localStorage.getItem("ratchet")
           let decrytped_and_ratchet_returned = decrypt(ratchet, message_bundle)
           let json = JSON.parse(decrytped_and_ratchet_returned)
           localStorage.setItem("ratchet", json.ratchet)
+          for (let i=0;i<dataChannelList.length;i++){
+                if (dataChannelList[i].dataChannel==dataChannel){
+                  dataChannelList[i].ratchet=localStorage.getItem("ratchet");
+                }
+              }
           console.log(json.decrypted)
           return json.decrypted
         }
@@ -221,7 +262,7 @@
     //########################################################-end of signal-#########################################
 
     var socket = io();
-var userName = "patoche" + Math.random();
+    var userName;// = "patoche" + Math.random();
         
 
 //flo
@@ -234,7 +275,7 @@ function delay(n){
 window.onload = oninit();
 async function oninit(){
     await delay(1000)
-    get_your_name();
+   get_your_name();
     
 }
 
@@ -296,37 +337,134 @@ function changeUnderscoreIntoWhiteSpaces(word) {
       var pcCaller;
       var pcCallee;
       var dataChannel;
+      var dataChannelList = new Array();
 
+
+      //put the name of the client in the front 
+let divHeader = document.getElementById("friendName");
+      divHeader.innerHTML += `<div class="col-sm-8 col-xs-7 heading-name" id = "yourName">
+                  <a class="heading-name-meta">Hello ${userName} !
+                  </a>
+                </div>
+              `;
+      function putUserName() {
+          document.getElementById("yourName").style.display = "initial";
+    };
 
       //envoie msg 
 
-      let SendButton = document.getElementById("messageInput");
-      SendButton.addEventListener("change", e => {
-          let divMessage = document.getElementById("messageInput");
-          sendMessage(dataChannel, divMessage.value);
-          divMessage.value = "";
-      });
+let SendButton = document.getElementById("messageInput");
+SendButton.addEventListener("change", e => {
+    let divMessage = document.getElementById("messageInput");
+    displayMessageToSend(dataChannel, divMessage.value);
+    if (dataChannelList.length > 0) {
+        for (let i = 0; i < dataChannelList.length; i++)
+            sendMessage(dataChannelList[i].dataChannel, divMessage.value, userName);
+    }
+    else {
+        sendMessage(dataChannel, divMessage.value, userName);
+    }
+
+    divMessage.value = "";
+});
+
+var password="coucou";
+
+async function deleteMessages(convName) {
+    //remove messages and hide the quit button 
+    let messages = "";
+    let divMsg = document.getElementById("messages");
+    //console.log(divMsg);
+    let divMessages = document.getElementsByClassName("message-text");
+    for (let i = 0; i < divMessages.length; i++) {
+        //console.log(divMessages[i].parentElement.children);
+        if (divMessages[i].parentNode.className == "receiver") {
+            // console.log(divMessages[i].textContent.trimStart());
+            messages += "$£€/receiv/";
+        }
+        else if (divMessages[i].parentNode.className == "sender") {
+            messages += "$£€/sender/";
+        }
+        let message = divMessages[i].textContent.trimStart().trimEnd();
+        messages += message;
+
+    }
+
+    console.log(messages);
+    divMsg.parentNode.removeChild(divMsg);
+    document.getElementById("button_quit").parentNode.removeChild(document.getElementById("button_quit"))    
+    let divConvo = document.getElementById("conversation");
+    divConvo.innerHTML += `<div id="messages"></div>`;
+    document.getElementById("logo_title").style.display = "initial";
+    let JSONToSave = await send_crypted_message(messages, password, convName, userName);
+    let loadedMessages = await extract_from_JSON(JSONToSave, password);
+    displayLoadedConversation(loadedMessages);
+    return messages;
+};
 
 
-
+function displayLoadedConversation(messages) {
+    let messagesToDisplay = messages.split("$£€");
+    messagesToDisplay.forEach(message => {
+        if (message.slice(0, 8) == "/receiv/") {
+            //Afficher le message.slice(8) avec la classe receiver
+            let divMsg = document.getElementById("messages");
+            divMsg.innerHTML += `
+            <div class="row message-body">
+                <div class="col-sm-12 message-main-receiver">
+                    <div class="receiver">
+                        <div class="message-text">
+                                ${message.slice(8)}
+                                </div>
+                        </div>
+                </div>
+            </div>
+            `;
+            //console.log(message.slice(8));
+        }
+        else if (message.slice(0, 8) == "/sender/") {
+            //Afficher le message.slice(8) avec la classe sender
+            //PAS OUF LE COPIE COLLE 
+            let divMsg = document.getElementById("messages");
+            divMsg.innerHTML += `
+            <div class="row message-body">
+                <div class="col-sm-12 message-main-sender">
+                    <div class="sender">
+                        <div class="message-text">
+                        ${message.slice(8)}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            `;
+            //console.log(message.slice(8));
+        }
+    });
+};
 
 
       function messageReceive(dataChannel) {
           dataChannel.addEventListener("message", async event => {
-            if (event.data == 'init message signal'){
+            // if (event.data == 'init message signal'){
 
-            }
+            // }
             if (event.data.slice(0,6) == '{"kty"'){
               localStorage.setItem("bob_pub_key_from_ratchet", event.data)
-              alice_init_ratchet_js()
-              send_signal_js("init message signal")
+              console.log("bob_pub_key_from_ratchet" +  event.data)
+              await alice_init_ratchet_js()
+              for (let i=0;i<dataChannelList.length;i++){
+                if (dataChannelList[i].dataChannel==dataChannel){
+                  dataChannelList[i].ratchet=localStorage.getItem("ratchet");
+                }
+              }
+              await send_signal_js("init message signal","alice",dataChannel)
             }
             else{
-              let ratchet = localStorage.getItem("ratchet")
-              let message_decrypted = await decrypt_signal_js(event.data)
+              //let ratchet = localStorage.getItem("ratchet")
+              let message_decrypted = await decrypt_signal_js(event.data,dataChannel);
               console.log("Message decrypted : " + message_decrypted);
               console.log("Message received : " + event.data);
-              let divMsg = document.getElementById("conversation");
+              let divMsg = document.getElementById("messages");
               divMsg.innerHTML += `
               <div class="row message-body">
                   <div class="col-sm-12 message-main-receiver">
@@ -338,47 +476,108 @@ function changeUnderscoreIntoWhiteSpaces(word) {
                   </div>
               </div>
               `;
+              if (dataChannelList.length > 0) {
+            for (let i = 0; i < dataChannelList.length; i++) {
+                if (dataChannelList[i].dataChannel != dataChannel) {
+                  console.log("POUR DELAY MEsSAGE:")
+                  console.log(dataChannelList[i].dataChannel)
+                    sendMessage(dataChannelList[i].dataChannel,message_decrypted,"tekas")
+                    //dataChannelList[i].dataChannel.send(message_decrypted);
+                }
+            }
+        }
             }
           });
       }
-      function sendMessage(dataChannel, message) {
-          if (dataChannel.readyState == "open") {
-            send_signal_js(message)
-            //  dataChannel.send(message);
-              let divMsg = document.getElementById("conversation");
-              divMsg.innerHTML += `
-              <div class="row message-body">
-                  <div class="col-sm-12 message-main-sender">
-                      <div class="sender">
-                          <div class="message-text">
-                          ${message}
-                          </div>
-                      </div>
-                  </div>
-              </div>
-              `;
-          }
-      };
-      function displayOffer(senderName) {
-          let divModal = document.getElementById("modal");
-          divModal.innerHTML += `<div id="offer" class="modal">
-              <div class="modal-dialog">
-                <div class="modal-content">
-                  <header class="modalContainer"> Offer By ${senderName}</header>
-                  <button class=acceptButton id=${changeWhiteSpacesIntoUnderscore(senderName)}>Accept offer send by:${senderName}</button>          
-                </div >
-              `;
-      }
 
-      /*
-          const stream = navigator.mediaDevices.getUserMedia({ audio: true });
-      
-          var pcCaller = new RTCPeerConnection(options);;
-          const audioTrack = stream.getTracks().array.forEach(track => {
-          pcCaller.addTrack(track, stream);
-          });;
-      
-      */
+function displayMessageToSend(dataChannel, message) {
+    if (dataChannel.readyState == "open") {
+        let divMsg = document.getElementById("messages");
+        divMsg.innerHTML += `
+        <div class="row message-body">
+            <div class="col-sm-12 message-main-sender">
+                <div class="sender">
+                    <div class="message-text">
+                    ${message}
+                    </div>
+                </div>
+            </div>
+        </div>
+        `;
+    }
+    }
+
+function sendMessage(dataChannel, message, senderName) {
+    if (dataChannel.readyState === "open") {
+      send_signal_js(message,senderName,dataChannel)
+       // dataChannel.send(senderName + " : " + message);
+    }
+};
+   
+function displayOffer(senderName) {
+    console.log("Sender name :" + senderName);
+    let divModal = document.getElementById("modal");
+    divModal.innerHTML += `<div id="offer" class="modal">
+        <div class="modal-dialog">
+          <div class="modal-content">
+           <div class="total">
+            <div class="modalContainer"> Hi ! Somebody want to connect &#x1F600; </div>
+            <div class= "namename">  ${senderName} </div>
+            </div>
+            <button class="acceptButton" id=${changeWhiteSpacesIntoUnderscore(senderName)}><img src="/img/telephone.png" >Accept</button>   
+            <button class="declineButton" id=${changeWhiteSpacesIntoUnderscore(senderName)}><img src="/img/decline.png" >Decline</button>   
+          </div >
+        `;
+
+
+    let divHeader = document.getElementById("friendName");
+    document.getElementById("yourName").style.display = "none";
+    divHeader.innerHTML += `<div class="col-sm-8 col-xs-7 heading-name" id ="userName">
+            <a class="heading-name-meta">${senderName}
+            </a>
+            <spa>Online</span>
+          </div>
+          <button class="btn btn-secondary pull-right"id="button_quit">Quitter la conversation</button>
+          `;
+
+};
+
+function searchFriend() {
+    let divModal = document.getElementById("modal");
+    divModal.innerHTML += `<div id="addFriendPopUp" class="modal">
+        <div class="modal-dialog">
+            <div class="modal-content" id = "search">
+                <input id="searchbar" onkeyup="search_your_friend();" type="text" name="search" placeholder="Search a friend..">
+            </div>
+        </div>`
+}
+
+function displayWaiting() {
+    let divModal = document.getElementById("modal");
+    divModal.innerHTML += `<div id="offer2" class="modal" >
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <header class="modalContainer"> Waiting for answer...</header>
+                        </div >
+                        `;
+};
+function displayDecline() {
+    let divModal = document.getElementById("modal");
+    divModal.innerHTML += `<div id="offer1" class="modal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <button type="button" class="element-head" aria-label="Close" id ="button_quit_decline">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <header class="modalContainer"> Offer declined, maybe he doesn't like you ...</header>
+            </div >
+            `;
+};
+
+function hideDecline() {
+    const offer1 = document.getElementById("offer1");
+    offer1.parentNode.removeChild(offer1);
+};
 
 
       var cells = document.getElementById("cells");
@@ -426,6 +625,49 @@ function changeUnderscoreIntoWhiteSpaces(word) {
     let userToDelete = document.getElementById(user);
     userToDelete.parentNode.removeChild(userToDelete);
 };
+function whatchForClosing(dataChannel) {
+    dataChannel.addEventListener("close", ev => {
+        console.log(dataChannel.readyState);
+        let divName = document.getElementById("userName");
+        divName.parentNode.removeChild(divName);
+        putUserName();
+        deleteMessages();
+        //marche pas 
+        document.getElementsByClassName("offerButton").disabled = false;
+
+
+    });
+
+};
+function closeDc(dataChannel) {
+    let quitButton = document.getElementById("button_quit");
+    quitButton.addEventListener("click", e => {
+      if (dataChannelList.length > 0) {
+            for (let i = 0; i < dataChannelList.length; i++) {
+                dataChannelList[i].dataChannel.close();
+            }
+        }
+        else {
+            dataChannel.close();
+        }
+
+    });
+
+};
+
+
+//fonctions menu
+function openNav() {
+    document.getElementById("sideNavigation").style.width = "180px";
+    document.getElementById("main").style.marginLeft = "180px";
+}
+
+function closeNav() {
+    document.getElementById("sideNavigation").style.width = "0";
+    document.getElementById("main").style.marginLeft = "0";
+}
+
+
 
 socket.on("userLeave", user => {
     deleteUser(user);
@@ -450,24 +692,37 @@ socket.on("userLeave", user => {
           //création sdp et envoi de sdp puis de ICE
           //côté caller
           callee = receiverName;
-          //console.log("Connexion accepté de :" + receiverName);
+          console.log("Connexion accepté de :" + receiverName);
+          document.getElementById("offer2").parentNode.removeChild(document.getElementById("offer2"));
 
-          //Creating the caller peer connection and his sdp
-          if (pcCaller == undefined) {
-              pcCaller = new RTCPeerConnection();
-              dataChannel = pcCaller.createDataChannel("dataChannel");
-              //console.log(dataChannel);
-          }
+    //Creating the caller peer connection and his sdp
+
+    pcCaller = new RTCPeerConnection();
+    dataChannel = pcCaller.createDataChannel(receiverName);
+    let dataChannelInfo={
+      dataChannel:dataChannel,
+      ratchet:""
+    };
+//    dataChannelList.push(dataChannel);
+    dataChannelList.push(dataChannelInfo);
+
+    pcCaller.addEventListener('connectionstatechange', event => {
+        console.log("connection ?")
+        if (pcCaller.connectionState === 'connected') {
+            // Peers connected!
+            //for (let i = 0; i < dataChannelList.length; i++)
+            //messageReceive(dataChannelList[i]);
+            //TEST
+            //messageReceive(dataChannel);
+            console.log("GGWP peers connected!");
+        }
+    });
 
 
-          pcCaller.addEventListener('connectionstatechange', event => {
-              //console.log("connection ?")
-              if (pcCaller.connectionState === 'connected') {
-                  // Peers connected!
-                  messageReceive(dataChannel);
-                  //console.log("GGWP peers connected!");
-              }
-          });
+    whatchForClosing(dataChannel);
+    closeDc(dataChannel);
+
+
 
           var CallerSdp = await pcCaller.createOffer({ iceRestart: true });
           //Sending the caller sdp to the callee  
@@ -475,6 +730,23 @@ socket.on("userLeave", user => {
           //Setting the caller (his) local description
           await pcCaller.setLocalDescription(CallerSdp);
       });
+
+socket.on("decline", async ev => {
+    document.getElementById("offer2").style.display = "none";
+    displayDecline();
+    const quitDecline = document.getElementById("button_quit_decline");
+    //await delay(1000);
+    quitDecline.addEventListener("click", e => {
+        hideDecline();
+    });
+    let div = document.getElementById("userName");
+    div.parentNode.removeChild(div);
+    let button_quit = document.getElementById("button_quit");
+    button_quit.parentNode.removeChild(button_quit);
+    putUserName();
+
+
+});
       //Waiting for callee sdp 
 
       // when callee send spd info
@@ -507,16 +779,18 @@ socket.on("userLeave", user => {
 
           //-------------------------------------------------------INIT----------------------------
           dataChannel.addEventListener("open",async ev => {
+            console.log("data channel D'ALICE")
+            console.log(dataChannel)
             await init_alice()
             // delay(1000)
-            master_key_alice()
+            await master_key_alice()
               const readyState = dataChannel.readyState;
-              //console.log("Send channel state is: " + readyState);
+              console.log("Send channel state is: " + readyState);
               //sendMessage(dataChannel, "coucou bro 2");
               messageReceive(dataChannel)
           });
           dataChannel.addEventListener("error", ev => {
-              //console.log(ev);
+              console.log(ev);
           });
 
 
@@ -569,14 +843,17 @@ socket.on("userLeave", user => {
             await master_key_bob()
             console.log(" master ?  "+localStorage.getItem("master_key_bob_part"))
             await bob_init_ratchet_js()
+            console.log("bob_pub_key_from_ratchet; " +  localStorage.getItem("bob_pub_key_from_ratchet"))
             dataChannel.send(localStorage.getItem("bob_pub_key_from_ratchet"))
+            
 
-
-              //console.log("datachannel ? : ");
+              console.log("datachannel ? : ");
               console.log(dataChannel);
               //RATCHET INIT COTE BOB -> pub key send
               //sendMessage(dataChannel, "");
               messageReceive(dataChannel); //si ca commence par ""
+              whatchForClosing(dataChannel);
+              closeDc(dataChannel);
 
           }, false);
           //messageReceive(dataChannel);
@@ -630,26 +907,63 @@ socket.on("userLeave", user => {
       });
 
       const acceptButton = document.getElementsByClassName("Accept");
+      const declineButton = document.getElementsByClassName("acceptButton");
+const searchButton = document.getElementById("buttonAdd");
+
       document.addEventListener('click', function (e) {
           if (e.target && e.target.className == 'offerButton') {
               //Caller sending his offer to the callee 
               socket.emit("request", { type: "offer", name: e.target.id });
              // console.log(e.target.id);
+             //display pop up
+        displayWaiting();
+        let divHeader = document.getElementById("friendName");
+        document.getElementById("yourName").style.display = "none";
+        divHeader.innerHTML += `<div class="col-sm-8 col-xs-7 heading-name" id="userName">
+                                    <a class="heading-name-meta">${e.target.id}
+                                    </a>
+                                    <span>Online</span>
+                                </div>
+                                <button class="btn btn-secondary pull-right" id="button_quit">Quitter la conversation</button>
+                                `;
+        document.getElementById("logo_title").style.display = "none";
           }
           if (e.target && e.target.className == 'acceptButton') {
-             // console.log(e.target);
-              let divModal = document.getElementById("offer").style.display = "none";
-              //callee accepted the offer and sending back his answer to the caller 
-              socket.emit("request", { type: "answer", name:changeUnderscoreIntoWhiteSpaces(e.target.id) });
-             // console.log(changeUnderscoreIntoWhiteSpaces(e.target.id));
-              caller = changeUnderscoreIntoWhiteSpaces(e.target.id);
-          }
+            document.getElementById("offer").parentNode.removeChild(document.getElementById("offer"));        //callee accepted the offer and sending back his answer to the caller 
+        socket.emit("request", { type: "answer", name: changeUnderscoreIntoWhiteSpaces(e.target.id) });
+        console.log(changeUnderscoreIntoWhiteSpaces(e.target.id));
+        caller = changeUnderscoreIntoWhiteSpaces(e.target.id);
+        document.getElementById("logo_title").style.display = "none";
+        //marche pas 
+        document.getElementsByClassName("offerButton").disabled = true;
+
+
+
+    };
+
+ //handle decline offer
+ if (e.target && e.target.className == 'declineButton') {
+        document.getElementById("offer").style.display = "none";
+        socket.emit("request", { type: "decline", name: changeUnderscoreIntoWhiteSpaces(e.target.id) });
+        let button_quit = document.getElementById("button_quit");
+        button_quit.parentNode.removeChild(button_quit);
+        let div = document.getElementById("userName");
+        div.parentNode.removeChild(div);
+        putUserName();
+
+
+    };
 
       });
 
 
+      searchButton.addEventListener("click", e => {
+    searchFriend();
+})
+
     window.addEventListener('beforeunload', e => {
     socket.emit("disconnect");
+    console.log("jme tire")
     });
 
 
@@ -659,7 +973,27 @@ socket.on("userLeave", user => {
 </head>
 
 <body>
+  <!-- 
+  <nav class="navbar">
 
+    <div id="sideNavigation" class="sidenav">
+      <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+      <a href="#">profil</a>
+      <a href="#">deconnexion</a>
+
+    </div>
+
+    <nav class="topnav">
+      <a href="#" onclick="openNav()">
+        <svg width="30" height="30" id="icoOpen">
+          <path d="M0,5 30,5" stroke="#000" stroke-width="5" />
+          <path d="M0,14 30,14" stroke="#000" stroke-width="5" />
+          <path d="M0,23 30,23" stroke="#000" stroke-width="5" />
+        </svg>
+      </a>
+    </nav>
+  </nav>
+  Sidebar -->
   <div class="container app">
     <div class="row app-one">
       <div class="modal" id="modal">
@@ -668,65 +1002,33 @@ socket.on("userLeave", user => {
       <div class="col-sm-4 side">
         <div class="side-one">
           <!-- Heading -->
-          <div class="row heading">
-            <div class="col-sm-3 col-xs-3 heading-avatar">
-              <div class="heading-avatar-icon">
-                <img src="img/man-2-512.png">
-              </div>
-            </div>
-            <div class="col-sm-1 col-xs-1  heading-dot  pull-right">
-              <i class="fa fa-ellipsis-v fa-2x  pull-right" aria-hidden="true"></i>
-            </div>
+          <div class="row heading" id="headingLeft">
+            <h4 class="text-center">Mes amis</h4>
           </div>
 
           <!-- Heading End -->
 
           <!-- SearchBox -->
-          <div class="row searchBox">
-            <div class="col-sm-12 searchBox-inner">
-              <div class="form-group has-feedback">
-                <input id="searchText" type="text" class="form-control" name="searchText"
-                  placeholder="Recherchez un ami">
-                <span class="glyphicon glyphicon-search form-control-feedback"></span>
-              </div>
+          <div class="row message-previous">
+            <div class="col-sm-12 previous">
             </div>
+          </div>
+          <div class="row heading" id="addFriends">
+            <button id="buttonAdd">Add friends</button>
           </div>
 
           <!-- Search Box End -->
           <!-- sideBar friend-->
           <div class="row sideBar" id="friends">
 
-            <div class="row sideBar-body">
-              <div class="col-sm-3 col-xs-3 sideBar-avatar">
-                <div class="avatar-icon">
-                  <img src="img/man-2-512.png"></img>
-                </div>
-              </div>
-              <div class="col-sm-9 col-xs-9 sideBar-main">
-                <div class="row">
-                  <div class="col-sm-8 col-xs-8 sideBar-name">
-                    <span class="name-meta">John Doe
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
           </div>
           <!-- Sidebar End -->
         </div>
         <div class="side-two">
 
-          <!-- Heading -->
+          <!-- Heading responsive  -->
           <div class="row newMessage-heading">
-            <div class="row newMessage-main">
-              <div class="col-sm-2 col-xs-2 newMessage-back">
-                <i class="fa fa-arrow-left" aria-hidden="true"></i>
-              </div>
-              <div class="col-sm-10 col-xs-10 newMessage-title">
-                New Chat
-              </div>
-            </div>
+            <h5 class="text-center">Mes amis</h5>
           </div>
           <!-- Heading End -->
 
@@ -775,32 +1077,23 @@ socket.on("userLeave", user => {
       <!-- Conversation Start -->
       <div class="col-sm-8 conversation">
         <!-- Heading right-->
-        <div class="row heading">
+        <div class="row heading" id="friendName">
           <div class="col-sm-2 col-md-1 col-xs-3 heading-avatar">
             <div class="heading-avatar-icon">
               <img src="img/man-2-512.png">
             </div>
           </div>
-          <div class="col-sm-8 col-xs-7 heading-name">
-            <a class="heading-name-meta">John Doe
-            </a>
-            <spa>Online</span>
-          </div>
-          <div class="col-sm-1 col-xs-1  heading-dot pull-right">
-            <i class="fa fa-ellipsis-v fa-2x  pull-right" aria-hidden="true"></i>
-          </div>
+
         </div>
         <!-- Heading End -->
 
         <!-- Message Box -->
         <div class="row message" id="conversation">
-
           <div class="row message-previous">
             <div class="col-sm-12 previous">
             </div>
           </div>
-
-          <div class="row message-body">
+          <div class="row message-body" id="logo_title">
             <!-- display logo when no friend selected -->
             <div class="Yolo_logo">
               <img src="img/LOGO_YOLO.png" alt="image" class="img-responsive center-block" />
@@ -809,30 +1102,12 @@ socket.on("userLeave", user => {
               <h3 class="text-center">Click on a friend to start a conversation</h3>
             </div>
             <div id="modal"></div>
+          </div>
+          <div id="messages">
 
-            <div class="col-sm-12 message-main-receiver">
-              <div class="receiver">
-                <!--
-                <div class="message-text-">
-                  Hey, Its Awesome..!
-                </div>
-              -->
-              </div>
-
-            </div>
           </div>
 
-          <div class="row message-body">
-            <div class="col-sm-12 message-main-sender">
-              <div class="sender">
-                <!--
-                <div class="message-text">
-                  Thanks n I know its awesome...!
-                </div>
-              -->
-              </div>
-            </div>
-          </div>
+
         </div>
         <!-- Message Box End -->
 
@@ -859,8 +1134,56 @@ socket.on("userLeave", user => {
   </div>
 
   <!-- App End -->
-</body>
-<!-- <script src="js/yolo_web_rtc.js">  -->
 
+</body>
+<script>
+let url = "https://yoloooo.com";
+
+function search_your_friend() {
+  console.log("dans search friend")
+    const val = document.querySelector('input').value;
+    console.log(val);
+    let xhr = new XMLHttpRequest();
+    xhr.open("GET", url + `/get_users/` + val, false);
+    xhr.onload = () => {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                console.log(xhr.statusText);
+                parseData(xhr.responseText);
+            } else {
+                console.error(xhr.statusText);
+            }
+        }
+    };
+    xhr.onerror = () => {
+        console.error(xhr.statusText);
+    };
+    xhr.send(null);
+};
+//detecte le
+
+function parseData(response) {
+    console.log("dans parse data");
+    search_response = JSON.parse(response);
+    console.log("search_response : ");
+    console.log(search_response);
+
+    document.getElementById("search").innerHTML = `</br>`;
+    for (var i = 0; i < search_response.length; i++) {
+        document.getElementById("search").innerHTML += `<button onclick="addThisFriend('${search_response[i].id}','${search_response[i].full_name}');">ajouter</button>`;
+        document.getElementById("search").innerHTML += (search_response[i].full_name)
+        document.getElementById("search").innerHTML += "</br>";
+
+    };
+};
+async function addThisFriend(id, full_name) {
+    let xhr = new XMLHttpRequest();
+    console.log(full_name);
+    let param = `friend_id_to_add=` + id + `&friend_full_name=` + full_name;
+    xhr.open("POST", url + `/add_friend/?` + param, true);
+    xhr.send()
+    await delay(300)
+    //window.location.reload();
+};
 </script>
 </html>

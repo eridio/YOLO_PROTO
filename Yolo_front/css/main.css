@@ -14,6 +14,68 @@ body {
   background-color: rgba(3, 72, 85, 1);
   background-size: cover;
   margin-bottom: auto;
+  background-image: url(img/backMontagne.jpg);
+}
+
+
+
+#addFriends #buttonAdd {
+  display: grid;
+  text-align: center;
+  font-size: medium;
+  width: 50%;
+  margin: auto;
+  border-radius: 20px;
+  background-color: #777;
+}
+
+.sidenav {
+  height: 100%;
+  width: 0;
+  position: fixed;
+  z-index: 1;
+  top: 70px;
+  left: 1350px;
+  background-color: #111;
+  overflow-x: hidden;
+  padding-top: 60px;
+  transition: 0.5s;
+}
+
+.topnav {
+  top: 85px;
+  left: 1310px;
+  position: absolute;
+  z-index: 1;
+}
+
+/* The navigation menu links */
+.sidenav a {
+  padding: 8px 8px 8px 32px;
+  text-decoration: none;
+  font-size: 20px;
+  color: #818181;
+  display: block;
+  transition: 0.3s
+}
+
+
+.sidenav a:hover,
+.offcanvas a:focus {
+  color: #f1f1f1;
+}
+
+
+.sidenav .closebtn {
+  position: absolute;
+  top: 0;
+  right: 25px;
+  font-size: 36px;
+  margin-left: 50px;
+}
+
+.online {
+  color: rgb(0, 187, 0);
 }
 
 /*pop up*/
@@ -43,21 +105,115 @@ body {
 /* Le contenu de la modale */
 .modal-dialog .modal-content {
   margin: auto;
-  background-color: #f3f3f3;
+  background-color: #D3D0CB;
   position: relative;
   padding: 0;
   outline: 0;
   border: 1px #777 solid;
   text-align: center;
-  width: 65%;
-  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 26%;
+  height: 26%;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2),
+    0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  font-family: Georgia,
+    'Times New Roman',
+    Times,
+    serif;
+  font-style: normal;
+  color: black;
+  font-weight: 400;
   animation-name: slideDownFadeIN;
   animation-duration: 0.5s;
+  animation: waviy 2s infinite;
+  animation-delay: calc(.1s * var(--i));
+  font-size: 15px;
+}
+
+
+.element-head {
+  display: block;
+  right: 10px;
+  top: 0;
+  position: absolute;
+  margin-top: 5px;
+  flex-flow: row-reverse;
+
 }
 
 .modalContainer {
-  padding: 2px 16px;
+  font-size: 18px;
+}
+
+.namename {
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 300;
+}
+
+@keyframes waviy {
+
+  0%,
+  40%,
+  100% {
+    transform: translateY(0)
+  }
+
+  20% {
+    transform: translateY(-20px)
+  }
+}
+
+
+.acceptButton {
+
+  color: black;
+  border: none;
+  cursor: pointer;
+  display: block;
+  position: relative;
+  font-family: Verdana, Arial, sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  animation: pulse 1s cubic-bezier(0, 0, 0, 0) 0.3s infinite;
+  background-color: #D3D0CB;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 2px 2px rgba(0, 0, 0, .0);
+    border-radius: 50%;
+  }
+
+  100% {
+    transform: scale(1.05);
+    box-shadow: 0 2px 2px rgba(0, 0, 0, .0);
+    border-radius: 45%;
+  }
+}
+
+.declineButton {
+  background-color: #D3D0CB;
+
+  color: black;
+  font-family: Verdana, Arial, sans-serif;
+  font-style: normal;
+  border: none;
+  position: relative;
+  font-weight: 400;
+
+
+}
+
+.offerButton {
+  font-family: Verdana, Arial, sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  border: none;
+  background-color: #D3D0CB;
 }
 
 .fa-2x {
@@ -102,6 +258,7 @@ body {
   position: relative;
   display: block;
   top: 0;
+  background-color: #D3D0CB;
 
 }
 
@@ -120,7 +277,17 @@ body {
 }
 
 
-.heading {
+#headingLeft {
+  padding: 10px 16px 10px 15px;
+  margin: 0 !important;
+  height: 60px;
+  width: 100%;
+  background-color: #19768d;
+  z-index: 1000;
+
+}
+
+#friendName {
   padding: 10px 16px 10px 15px;
   margin: 0 !important;
   height: 60px;
@@ -128,6 +295,9 @@ body {
   background-color: #028090;
   z-index: 1000;
 }
+
+
+
 
 .heading-avatar {
   padding: 0 !important;
@@ -364,10 +534,24 @@ body {
   /*overflow-y: auto;*/
 }
 
+.messages {
+  height: auto;
+}
+
+#button_quit {
+  background-color: #ca834a;
+  border: none;
+  color: white;
+  text-align: center;
+  text-decoration: none;
+  font-size: 16px;
+  border-radius: 12px;
+}
+
 .message {
   padding: 0 !important;
   margin: 0 !important;
-  background-color: #eeece3;
+  background-color: #f5f0e2;
   background-size: cover;
   overflow-y: auto;
   height: calc(100% - 120px);
@@ -419,17 +603,8 @@ body {
   padding-bottom: 0 !important;
 }
 
-.message-time {
-  margin: 0 !important;
-  margin-left: 50px !important;
-  font-size: 12px;
-  text-align: right;
-  color: #9a9a9a;
 
-}
 
-/*logo et texte */
-#Yolo_logo {}
 
 /*message receiver*/
 .receiver {
@@ -523,6 +698,10 @@ body {
   text-indent: 5px;
   box-shadow: none;
 }
+
+
+
+
 
 @media screen and (max-width: 700px) {
   .app {

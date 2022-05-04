@@ -304,7 +304,7 @@ io.on('connection', (socket) => {
           //send the answer to the recipient 
           io.to(recipientSocketId).emit("decline", senderName);
         }
-
+        break;;
       case "sdpCaller":
 
         //Get the recipient socketId

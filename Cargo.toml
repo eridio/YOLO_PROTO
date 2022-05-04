@@ -26,7 +26,7 @@ zeroize = {version = "1.3", features = ["zeroize_derive"]}
 hmac = "0.11.0"
 hashbrown = {version = "0.12", features = ["serde"]}
 rand_os ="*"
-
+rand="0.8.5"
 
 [dev-dependencies]
 crossbeam-deque = "0.8.1"
