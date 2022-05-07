@@ -11,10 +11,12 @@ span {
 }
 
 body {
-  background-color: rgba(3, 72, 85, 1);
+  background-color: rgba(51, 107, 129, 1);
   background-size: cover;
   margin-bottom: auto;
   background-image: url(img/backMontagne.jpg);
+  font-family: 'Oleo Script',
+    cursive;
 }
 
 
@@ -118,10 +120,7 @@ body {
   height: 26%;
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2),
     0 6px 20px 0 rgba(0, 0, 0, 0.19);
-  font-family: Georgia,
-    'Times New Roman',
-    Times,
-    serif;
+  font-family: 'Oleo Script', cursive;
   font-style: normal;
   color: black;
   font-weight: 400;
@@ -174,7 +173,8 @@ body {
   cursor: pointer;
   display: block;
   position: relative;
-  font-family: Verdana, Arial, sans-serif;
+  font-family: 'Oleo Script',
+    cursive;
   font-style: normal;
   font-weight: 400;
   animation: pulse 1s cubic-bezier(0, 0, 0, 0) 0.3s infinite;
@@ -199,7 +199,8 @@ body {
   background-color: #D3D0CB;
 
   color: black;
-  font-family: Verdana, Arial, sans-serif;
+  font-family: 'Oleo Script',
+    cursive;
   font-style: normal;
   border: none;
   position: relative;
@@ -209,8 +210,8 @@ body {
 }
 
 .offerButton {
-  font-family: Verdana, Arial, sans-serif;
-  font-weight: 400;
+  font-family: 'Oleo Script',
+    cursive;
   font-style: normal;
   border: none;
   background-color: #D3D0CB;
@@ -284,7 +285,9 @@ body {
   width: 100%;
   background-color: #19768d;
   z-index: 1000;
-
+  display: flex;
+  text-align: center;
+  font-size: large;
 }
 
 #friendName {
@@ -292,11 +295,37 @@ body {
   margin: 0 !important;
   height: 60px;
   width: 100%;
-  background-color: #028090;
+  background-color: rgb(51, 107, 129);
   z-index: 1000;
 }
 
 
+
+.searchConv {
+  margin-top: 5%;
+  margin-left: auto;
+  margin-right: auto;
+  background-color: #D3D0CB;
+  position: relative;
+  padding: 0;
+  outline: 0;
+  border: 1px #777 solid;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 30%;
+  height: 75%;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2),
+    0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  font-family: 'Oleo Script',
+    cursive;
+  font-style: normal;
+  color: black;
+  font-weight: 400;
+  font-size: 15px;
+
+}
 
 
 .heading-avatar {
@@ -318,7 +347,7 @@ body {
 
 .heading-name-meta {
   font-weight: 700;
-  font-size: 100%;
+  font-size: 160%;
   padding: 5px;
   padding-bottom: 0;
   text-align: left;
@@ -326,6 +355,7 @@ body {
   white-space: nowrap;
   color: rgb(255, 255, 255);
   display: block;
+  font-family: 'Oleo Script', cursive;
 }
 
 .heading-online {
@@ -372,6 +402,13 @@ body {
   background-color: #D3D0CB;
 }
 
+
+
+.title_left {
+  margin: auto;
+  text-align: center;
+  font-size: 24px;
+}
 
 /*#searchBox-inner input {
   box-shadow: none;
@@ -636,7 +673,7 @@ body {
 .reply {
   height: 60px;
   width: 100%;
-  background-color: #028090;
+  background-color: rgb(51, 107, 129);
   padding: 10px 5px 10px 5px !important;
   margin: 0 !important;
   z-index: 1000;
@@ -699,8 +736,40 @@ body {
   box-shadow: none;
 }
 
+.oldConv {
+  margin-top: 5%;
+  margin-left: auto;
+  margin-right: auto;
+  background-color: #D3D0CB;
+  position: relative;
+  padding: 0;
+  outline: 0;
+  border: 1px #777 solid;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 60%;
+  height: 75%;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2),
+    0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  font-family: 'Oleo Script',
+    cursive;
+  font-style: normal;
+  color: black;
+  font-weight: 400;
+  font-size: 15px;
+}
 
+#conv {
+  padding: 0 !important;
+  margin: 0 !important;
+  background-color: #D3D0CB;
+  overflow-y: auto;
+  height: calc(100% - 120px);
+}
 
+;
 
 
 @media screen and (max-width: 700px) {
@@ -862,4 +931,4 @@ body {
   -webkit-border-radius: 50% !important;
   -moz-border-radius: 50% !important;
   border-radius: 50% !important
-}
+} 

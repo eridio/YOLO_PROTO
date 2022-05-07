@@ -11,7 +11,12 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-  
+  <link href="https://fonts.googleapis.com/css2?family=Oleo+Script&family=Overpass:wght@100&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet"
+    href="https://fonts.sandbox.google.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <link rel="stylesheet"
+    href="https://fonts.sandbox.google.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0" />
   <script type="module">
        // import init from './pkg/helloword_bg.wasm';
     import { send_crypted_message, extract_from_JSON } from "./js/index.js";
@@ -263,6 +268,8 @@
 
     var socket = io();
     var userName;// = "patoche" + Math.random();
+    var username;
+    let msg;
         
 
 //flo
@@ -276,6 +283,8 @@ window.onload = oninit();
 async function oninit(){
     await delay(1000)
    get_your_name();
+   await delay(1000)
+   putUserNameOninit()
     
 }
 
@@ -299,13 +308,12 @@ function get_your_name() {
     };
     xhr.send(null);
 }
-let username;
-let msg;
+
 function parseData_get_your_name(response) {
     let json_received = JSON.parse(response);
     //console.log(json_received)
     username = json_received.full_name; 
-    console.log(json_received.id)
+    //console.log(json_received.id)
     userName = username
     
     socket.emit("request", msg = { type: "login", name: userName });
@@ -339,14 +347,17 @@ function changeUnderscoreIntoWhiteSpaces(word) {
       var dataChannel;
       var dataChannelList = new Array();
 
-
+var password="coucou";
       //put the name of the client in the front 
-let divHeader = document.getElementById("friendName");
-      divHeader.innerHTML += `<div class="col-sm-8 col-xs-7 heading-name" id = "yourName">
-                  <a class="heading-name-meta">Hello ${userName} !
-                  </a>
-                </div>
-              `;
+  async function putUserNameOninit(){
+          let divHeader = document.getElementById("friendName");
+                divHeader.innerHTML += `<div class="col-sm-8 col-xs-7 heading-name" id = "yourName">
+                            <a class="heading-name-meta">Hello ${userName} !
+                            </a>
+                          </div>
+                        `;
+  }
+
       function putUserName() {
           document.getElementById("yourName").style.display = "initial";
     };
@@ -368,7 +379,7 @@ SendButton.addEventListener("change", e => {
     divMessage.value = "";
 });
 
-var password="coucou";
+
 
 async function deleteMessages(convName) {
     //remove messages and hide the quit button 
@@ -545,21 +556,43 @@ function displayOffer(senderName) {
 function searchFriend() {
     let divModal = document.getElementById("modal");
     divModal.innerHTML += `<div id="addFriendPopUp" class="modal">
-        <div class="modal-dialog">
-            <div class="modal-content" id = "search">
-                <input id="searchbar" onkeyup="search_your_friend();" type="text" name="search" placeholder="Search a friend..">
+      <div class="searchConv">
+            <button type="button" class="element-head" aria-label="Close" id="button_quit_search">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            <input id="searchbar" onkeyup="search_your_friend()" type="text" name="search" placeholder="Search a friend..">
+            <div id="result_search_friend">
+
             </div>
-        </div>`
+        </div>
+           
+    </div>`
 }
 
-function displayWaiting() {
+function displayWaiting(senderName) {
     let divModal = document.getElementById("modal");
     divModal.innerHTML += `<div id="offer2" class="modal" >
                     <div class="modal-dialog">
                         <div class="modal-content">
+                          <button type="button" class="element-head" aria-label="Close" id="button_quit_waiting">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                             <header class="modalContainer"> Waiting for answer...</header>
                         </div >
                         `;
+
+                        let divHeader = document.getElementById("friendName");
+    document.getElementById("yourName").style.display = "none";
+    if (dataChannelList.length < 1) {
+        divHeader.innerHTML += `<div class="col-sm-8 col-xs-7 heading-name" id="userName">
+            <a class="heading-name-meta">${senderName}
+            </a>
+            <span>Online</span>
+        </div>
+        <button class="btn btn-secondary pull-right" id="button_quit">Quitter la conversation</button>`
+        ;
+
+    };
 };
 function displayDecline() {
     let divModal = document.getElementById("modal");
@@ -574,6 +607,25 @@ function displayDecline() {
             `;
 };
 
+
+function displayOldConv() {
+    let divModal = document.getElementById("modal");
+    //quand je met un id a old Conv ca casse tout donc pas de boutton pour linstant 
+    divModal.innerHTML += `<div class="oldConv" id="oldConvo">
+                            <button type="button" class="element-head" aria-label="Close" id="button_quit_conv">
+                            <span aria-hidden="true">&times;</span>
+                            </button>
+                                <div class="col-sm-6 ">
+                                    <div class="side-one">
+                                        <div class="row heading" id="headingLeft">
+                                            <h4 class="text-center">Mes conversations</h4>
+                                        </div>
+                                        <div class="row sideBar" id="conv">
+                                        </div>
+                                    </div>
+                                </div>
+                        </div>`
+}
 function hideDecline() {
     const offer1 = document.getElementById("offer1");
     offer1.parentNode.removeChild(offer1);
@@ -594,7 +646,7 @@ function hideDecline() {
           //Add to the list of user on the UI 
           let contactList = document.getElementById("friends");
           contactList.innerHTML += `
-              <div class="row sideBar-body">
+              <div class="row sideBar-body" id="${user}">
                   <div class="col-sm-3 col-xs-3 sideBar-avatar">
                       <div class="avatar-icon">
                           <img src="img/man-2-512.png">
@@ -625,13 +677,13 @@ function hideDecline() {
     let userToDelete = document.getElementById(user);
     userToDelete.parentNode.removeChild(userToDelete);
 };
-function whatchForClosing(dataChannel) {
+function whatchForClosing(dataChannel, convName) {
     dataChannel.addEventListener("close", ev => {
         console.log(dataChannel.readyState);
         let divName = document.getElementById("userName");
         divName.parentNode.removeChild(divName);
         putUserName();
-        deleteMessages();
+        deleteMessages(convName);
         //marche pas 
         document.getElementsByClassName("offerButton").disabled = false;
 
@@ -645,6 +697,7 @@ function closeDc(dataChannel) {
       if (dataChannelList.length > 0) {
             for (let i = 0; i < dataChannelList.length; i++) {
                 dataChannelList[i].dataChannel.close();
+                dataChannelList.splice(i, 1);
             }
         }
         else {
@@ -654,18 +707,6 @@ function closeDc(dataChannel) {
     });
 
 };
-
-
-//fonctions menu
-function openNav() {
-    document.getElementById("sideNavigation").style.width = "180px";
-    document.getElementById("main").style.marginLeft = "180px";
-}
-
-function closeNav() {
-    document.getElementById("sideNavigation").style.width = "0";
-    document.getElementById("main").style.marginLeft = "0";
-}
 
 
 
@@ -719,7 +760,7 @@ socket.on("userLeave", user => {
     });
 
 
-    whatchForClosing(dataChannel);
+    whatchForClosing(dataChannel,callee);
     closeDc(dataChannel);
 
 
@@ -732,10 +773,9 @@ socket.on("userLeave", user => {
       });
 
 socket.on("decline", async ev => {
-    document.getElementById("offer2").style.display = "none";
+    document.getElementById("offer2").parentNode.removeChild(document.getElementById("offer2"));
     displayDecline();
     const quitDecline = document.getElementById("button_quit_decline");
-    //await delay(1000);
     quitDecline.addEventListener("click", e => {
         hideDecline();
     });
@@ -744,7 +784,6 @@ socket.on("decline", async ev => {
     let button_quit = document.getElementById("button_quit");
     button_quit.parentNode.removeChild(button_quit);
     putUserName();
-
 
 });
       //Waiting for callee sdp 
@@ -776,6 +815,16 @@ socket.on("decline", async ev => {
                   socket.emit("request", { type: 'iceCandidateToCallee', name: callee, candidate: event.candidate });
               }
           });
+
+          socket.on("quitWaiting", e => {
+            let offer = document.getElementById("offer");
+            offer.parentNode.removeChild(offer);
+            let button_quit = document.getElementById("button_quit");
+            button_quit.parentNode.removeChild(button_quit);
+            let div = document.getElementById("userName");
+            div.parentNode.removeChild(div);
+            putUserName();
+        });
 
           //-------------------------------------------------------INIT----------------------------
           dataChannel.addEventListener("open",async ev => {
@@ -852,7 +901,7 @@ socket.on("decline", async ev => {
               //RATCHET INIT COTE BOB -> pub key send
               //sendMessage(dataChannel, "");
               messageReceive(dataChannel); //si ca commence par ""
-              whatchForClosing(dataChannel);
+              whatchForClosing(dataChannel,caller);
               closeDc(dataChannel);
 
           }, false);
@@ -902,34 +951,35 @@ socket.on("decline", async ev => {
 
       /////////////////////////////////////////////////////////////////////////////////////////
 
-      socket.on("disconnection", senderName2 => {
-
-      });
+   
 
       const acceptButton = document.getElementsByClassName("Accept");
       const declineButton = document.getElementsByClassName("acceptButton");
 const searchButton = document.getElementById("buttonAdd");
+const convButton = document.getElementById("buttonConv");
 
-      document.addEventListener('click', function (e) {
-          if (e.target && e.target.className == 'offerButton') {
-              //Caller sending his offer to the callee 
-              socket.emit("request", { type: "offer", name: e.target.id });
-             // console.log(e.target.id);
-             //display pop up
-        displayWaiting();
-        let divHeader = document.getElementById("friendName");
-        document.getElementById("yourName").style.display = "none";
-        divHeader.innerHTML += `<div class="col-sm-8 col-xs-7 heading-name" id="userName">
-                                    <a class="heading-name-meta">${e.target.id}
-                                    </a>
-                                    <span>Online</span>
-                                </div>
-                                <button class="btn btn-secondary pull-right" id="button_quit">Quitter la conversation</button>
-                                `;
+document.addEventListener('click', function (e) {
+    if (e.target && e.target.className == 'offerButton') {
+        //Caller sending his offer to the callee 
+        socket.emit("request", { type: "offer", name: e.target.id });
+        console.log(e.target.id);
+        //display pop up
+        displayWaiting(e.target.id);
+        const quitwaiting = document.getElementById("button_quit_waiting");
+        quitwaiting.addEventListener("click", event => {
+            document.getElementById("offer2").parentNode.removeChild(document.getElementById("offer2"));
+            document.getElementById("logo_title").style.display = "initial";
+            let button_quit = document.getElementById("button_quit");
+            button_quit.parentNode.removeChild(button_quit);
+            socket.emit("request", { type: 'quitWaiting', name: e.target.id });
+        });
+
+
         document.getElementById("logo_title").style.display = "none";
-          }
-          if (e.target && e.target.className == 'acceptButton') {
-            document.getElementById("offer").parentNode.removeChild(document.getElementById("offer"));        //callee accepted the offer and sending back his answer to the caller 
+    }
+    if (e.target && e.target.className == 'acceptButton') {
+        document.getElementById("offer").parentNode.removeChild(document.getElementById("offer"))
+        //callee accepted the offer and sending back his answer to the caller 
         socket.emit("request", { type: "answer", name: changeUnderscoreIntoWhiteSpaces(e.target.id) });
         console.log(changeUnderscoreIntoWhiteSpaces(e.target.id));
         caller = changeUnderscoreIntoWhiteSpaces(e.target.id);
@@ -940,10 +990,9 @@ const searchButton = document.getElementById("buttonAdd");
 
 
     };
-
- //handle decline offer
- if (e.target && e.target.className == 'declineButton') {
-        document.getElementById("offer").style.display = "none";
+    //handle decline offer
+    if (e.target && e.target.className == 'declineButton') {
+        document.getElementById("offer").parentNode.removeChild(document.getElementById("offer"));
         socket.emit("request", { type: "decline", name: changeUnderscoreIntoWhiteSpaces(e.target.id) });
         let button_quit = document.getElementById("button_quit");
         button_quit.parentNode.removeChild(button_quit);
@@ -954,17 +1003,27 @@ const searchButton = document.getElementById("buttonAdd");
 
     };
 
-      });
+});
 
 
-      searchButton.addEventListener("click", e => {
+searchButton.addEventListener("click", e => {
     searchFriend();
-})
-
-    window.addEventListener('beforeunload', e => {
-    socket.emit("disconnect");
-    console.log("jme tire")
+    const quitDecline = document.getElementById("button_quit_search");
+    quitDecline.addEventListener("click", e => {
+        let search = document.getElementById("addFriendPopUp");
+        search.parentNode.removeChild(search);
     });
+});
+
+  
+    convButton.addEventListener("click", e => {
+    displayOldConv();
+    const quitConv = document.getElementById("button_quit_conv");
+    quitConv.addEventListener("click", e => {
+        let conv = document.getElementById("oldConvo");
+        conv.parentNode.removeChild(conv);
+    });
+});
 
 
    </script>
@@ -1003,7 +1062,15 @@ const searchButton = document.getElementById("buttonAdd");
         <div class="side-one">
           <!-- Heading -->
           <div class="row heading" id="headingLeft">
-            <h4 class="text-center">Mes amis</h4>
+            <span class="material-symbols-outlined" id="buttonAdd">
+              person_add
+            </span>
+            <span class="material-symbols-outlined" >
+              logout
+            </span>
+            <span class="material-symbols-outlined" id="buttonConv">
+              folder_open
+            </span>
           </div>
 
           <!-- Heading End -->
@@ -1014,7 +1081,7 @@ const searchButton = document.getElementById("buttonAdd");
             </div>
           </div>
           <div class="row heading" id="addFriends">
-            <button id="buttonAdd">Add friends</button>
+            <div class="title_left">Mes amis</div>
           </div>
 
           <!-- Search Box End -->
@@ -1139,6 +1206,14 @@ const searchButton = document.getElementById("buttonAdd");
 <script>
 let url = "https://yoloooo.com";
 
+
+window.addEventListener("unload", e => {
+    console.log("jme tire");
+    //socket.emit("deconnect");
+    socket.emit("request",{type:"deconnect"});
+    //e.preventDefault();
+    });
+    
 function search_your_friend() {
   console.log("dans search friend")
     const val = document.querySelector('input').value;
@@ -1168,11 +1243,11 @@ function parseData(response) {
     console.log("search_response : ");
     console.log(search_response);
 
-    document.getElementById("search").innerHTML = `</br>`;
+    document.getElementById("result_search_friend").innerHTML = ``;
     for (var i = 0; i < search_response.length; i++) {
-        document.getElementById("search").innerHTML += `<button onclick="addThisFriend('${search_response[i].id}','${search_response[i].full_name}');">ajouter</button>`;
-        document.getElementById("search").innerHTML += (search_response[i].full_name)
-        document.getElementById("search").innerHTML += "</br>";
+        document.getElementById("result_search_friend").innerHTML += `<button onclick="addThisFriend('${search_response[i].id}','${search_response[i].full_name}');">ajouter</button>`;
+        document.getElementById("result_search_friend").innerHTML += (search_response[i].full_name)
+        document.getElementById("result_search_friend").innerHTML += "</br>";
 
     };
 };

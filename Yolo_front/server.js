@@ -347,6 +347,17 @@ io.on('connection', (socket) => {
         }
 
         break;
+
+      case "quitWaiting":
+      recipientSocketId = lookForUserSocketId(msg.name);
+      console.log("quit wait :" + msg.name);
+      senderName = lookForUserName(socket.id);
+      if (recipientSocketId != null) {
+        //send the answer to the recipient 
+        io.to(recipientSocketId).emit("quitWaiting", senderName);
+      };
+      break;
+
       case "leave":
 
         recipientSocketId = lookForUserSocketId(msg.name);
@@ -356,6 +367,18 @@ io.on('connection', (socket) => {
 
 
         break;
+      case "deconnect":
+        console.log("deco deco");
+        let index = 0;
+        for (index = 0; index < users.length; index++) {
+          if (socket.id == users[index].socketId) {
+            console.log("user " + users[index].userName + " leave");
+            socket.broadcast.emit("userLeave", users[index].userName);
+            users.splice(index, 1);
+            console.log(users);
+          }
+        }
+        break;
       default:
         console.log("Error in switch");
 
@@ -363,7 +386,8 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on("disconnect", function () {
+socket.on("disconnect", function() {
+    console.log("deco deco");
     let index = 0;
     for (index = 0; index < users.length; index++) {
       if (socket.id == users[index].socketId) {
