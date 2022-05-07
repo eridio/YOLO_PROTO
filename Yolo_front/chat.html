@@ -1,4 +1,5 @@
 <html lang="fr">
+
 <head>
   <title>YOLO</title>
   <meta charset="utf-8">
@@ -18,409 +19,409 @@
   <link rel="stylesheet"
     href="https://fonts.sandbox.google.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0" />
   <script type="module">
-       // import init from './pkg/helloword_bg.wasm';
+    // import init from './pkg/helloword_bg.wasm';
     import { send_crypted_message, extract_from_JSON } from "./js/index.js";
-    import init, {key_init_alice, key_init_bob,calculate_master_key_alice, calculate_master_key_bob, alice_init_ratchet,bob_init_ratchet, decrypt, send} from './pkg/helloworld.js'
+    import init, { key_init_alice, key_init_bob, calculate_master_key_alice, calculate_master_key_bob, alice_init_ratchet, bob_init_ratchet, decrypt, send } from './pkg/helloworld.js'
     localStorage.clear();
     async function run() {
-        await init()
-        document.body.textContent = helloworld()
-      }
-    
-     async function postBundle(json_to_send){
-     // let json = JSON.stringify(json_to_send)
+      await init()
+      document.body.textContent = helloworld()
+    }
+
+    async function postBundle(json_to_send) {
+      // let json = JSON.stringify(json_to_send)
       console.log("POST BUNDLE" + JSON.stringify(json_to_send))
 
 
-        let xhr = new XMLHttpRequest();
-        xhr.open("POST", `https://yoloooo.com/stock_bundle`, true);
-        xhr.setRequestHeader("Content-Type", "application/json");
-        xhr.send((JSON.stringify(json_to_send)));
-        //console.log("json to send POST BUNDLE" + JSON.parse(json_to_send))
-      }
-     async function getBundleof(username){
-        let json_to_send = JSON.stringify({"name_" : username})
-        
-        let xhr = new XMLHttpRequest();
-        xhr.open("POST", `https://yoloooo.com/get_bundle_of`, true);
-        xhr.setRequestHeader("Content-Type", "application/json");
-        xhr.send((json_to_send));
-        xhr.onload = () => {
-        if (xhr.readyState === 4) {
-            if (xhr.status === 200) {
-                console.log(" statusText : " + xhr.statusText);
-                localStorage.setItem("bundle_from_server" , xhr.responseText)
-                //await parseData(xhr.responseText);
-
-            } else {
-                console.error(xhr.statusText);
-            }
-        }
-    };
-    xhr.onerror = () => {
-        console.error(xhr.statusText);
-    };
-       
-        
-      }
-     
-    function parseDataBundle(response) {
-        
-        localStorage.setItem("bundle_from_server",(response))
+      let xhr = new XMLHttpRequest();
+      xhr.open("POST", `https://yoloooo.com/stock_bundle`, true);
+      xhr.setRequestHeader("Content-Type", "application/json");
+      xhr.send((JSON.stringify(json_to_send)));
+      //console.log("json to send POST BUNDLE" + JSON.parse(json_to_send))
     }
-    
-    async function init_alice(){
-        await init()
-       // import('./../pkg/helloworld.js')
-       await delay(1000)
-       console.log("ALICE (caller) :->     " + username)
-        let init_alice = key_init_alice(username)
-        let json = JSON.parse(init_alice)
-      
-        localStorage.setItem("alice_bundle" , JSON.stringify(json))
-        let bundle_complete = localStorage.getItem("alice_bundle")
-        
-        //console.log(JSON.parse(bundle_complete).bundle_keep)
-       
-        postBundle(JSON.parse(bundle_complete).bundle_server)
-       console.log("INIT DONE")
-    
-      }
-    async function init_bob(){
-        await init()
-        
-        console.log("BOB (callee) :->     " + username)
-        let init_bob = key_init_bob(username)
-        let json = JSON.parse(init_bob)
-        localStorage.setItem("bob_bundle" , JSON.stringify(json))
-       //console.log("init bob json bundle " + JSON.stringify(json.bundle_server))
-       postBundle(json.bundle_server)
-       console.log("INIT DONE")
-      }
-    
-      async function master_key_alice(){
-        await init()
-        
-        await delay(3000) //change to listen to storage change
+    async function getBundleof(username) {
+      let json_to_send = JSON.stringify({ "name_": username })
 
-        await getBundleof(callee)//change to uuid from signalment server
+      let xhr = new XMLHttpRequest();
+      xhr.open("POST", `https://yoloooo.com/get_bundle_of`, true);
+      xhr.setRequestHeader("Content-Type", "application/json");
+      xhr.send((json_to_send));
+      xhr.onload = () => {
+        if (xhr.readyState === 4) {
+          if (xhr.status === 200) {
+            console.log(" statusText : " + xhr.statusText);
+            localStorage.setItem("bundle_from_server", xhr.responseText)
+            //await parseData(xhr.responseText);
 
-        await delay(1000) //change to listen to storage changesearch_friend
-
-        let bob_server = JSON.parse(localStorage.getItem("bundle_from_server"))
-        let alice_local = JSON.parse(localStorage.getItem("alice_bundle"))
-
-
-        console.log("BOB FROM SERVER : " + localStorage.getItem("bundle_from_server"))
-        
-        let master_key_alice_part = calculate_master_key_alice(JSON.stringify(bob_server),JSON.stringify(alice_local.bundle_keep))
-        console.log(master_key_alice_part)
-        localStorage.setItem("master_key_alice_part",master_key_alice_part)
-
-
-        // console.log(json)
-      }
-      async function master_key_bob(){
-        await init()
-        await delay(3000)
-
-        await getBundleof(caller)
-        
-        await delay(1000) //change to listen to storage change
-        let alice_from_server = JSON.parse(localStorage.getItem("bundle_from_server"))
-        let bob_local = JSON.parse(localStorage.getItem("bob_bundle"))
-        
-        console.log("ALICE FROM SERVER  :"   + localStorage.getItem("bundle_from_server"))
-
-        let master_key_bob_part = calculate_master_key_bob(JSON.stringify(bob_local.bundle_keep),JSON.stringify(alice_from_server))
-        console.log(master_key_bob_part)
-        localStorage.setItem("master_key_bob_part",master_key_bob_part)
-        
-        // let json = JSON.parse(master_key_alice_part)
-        // console.log(json)
-      }
-    
-      async function bob_init_ratchet_js(){
-        await init()
-        //await delay(1000)
-        let sk = localStorage.getItem("master_key_bob_part")
-        await delay(1000)
-        console.log("sk recuperer du local storage" + sk)
-        let ratchetAndPubKeyBob = bob_init_ratchet(sk)
-        let json = JSON.parse(ratchetAndPubKeyBob)
-        console.log(json)
-        localStorage.setItem("ratchet",json.ratchet)
-        localStorage.setItem("bob_pub_key_from_ratchet" , json.pub_key)
-      }
-    
-      async function alice_init_ratchet_js(){
-        await init()
-        await delay(1000)
-        let sk = localStorage.getItem("master_key_alice_part")
-        let public_key_bob = localStorage.getItem("bob_pub_key_from_ratchet")
-        let ratchetAlice = alice_init_ratchet(sk,public_key_bob)
-        let json = JSON.parse(ratchetAlice)
-    
-        console.log(json)
-        localStorage.setItem("ratchet",json)
-
-      }
-    
-      async function alice_send_js(message){
-    
-        await init()
-        let alice_ratchet = localStorage.getItem("alice_ratchet")
-        let ratchet_and_message_bundle = send(alice_ratchet, message)
-        let json = JSON.parse(ratchet_and_message_bundle)
-        localStorage.setItem("alice_ratchet",json.ratchet)
-        console.log(json.message_bundle)
-    
-        let bob_ratchet = localStorage.getItem("bob_ratchet_string")
-        let steuplémarche = decrypt(bob_ratchet, json.message_bundle)
-        let json2 = JSON.parse(steuplémarche)
-        localStorage.setItem("bob_ratchet_string",json2.ratchet)
-        console.log(json2.decrypted)
-    
-        //document.getElementById("message_display").innerHTML += `<p style="float: right;">${json2.decrypted}</p> </br>`
-    
-      }
-    
-      async function bob_send_js(message){
-    
-        await init()
-        let bob_ratchet = localStorage.getItem("bob_ratchet_string")
-        let ratchet_and_message_bundle = send(bob_ratchet, message)
-        let json = JSON.parse(ratchet_and_message_bundle)
-        localStorage.setItem("bob_ratchet_string",json.ratchet)
-        console.log(json.message_bundle)
-    
-        let alice_ratchet = localStorage.getItem("alice_ratchet")
-        let steuplémarche = decrypt(alice_ratchet, json.message_bundle)
-        let json2 = JSON.parse(steuplémarche)
-        localStorage.setItem("alice_ratchet",json2.ratchet)
-        console.log(json2.decrypted)
-        document.getElementById("message_display").innerHTML += `<p>${json2.decrypted}</p> </br>`
-       
+          } else {
+            console.error(xhr.statusText);
+          }
         }
-    
-        async function send_signal_js(message,senderName,dataChannel)  {
-          await init()
-          let ratchet;
-          console.log("AVANT LE IF")
-          if(dataChannelList.length>0){
-            for (let i=0;i<dataChannelList.length;i++){
-                console.log("datachannel [i] =  " +dataChannelList[i])
-                if (dataChannelList[i].dataChannel==dataChannel){
-                  console.log("ratchet de la data channel:     "+dataChannelList[i].ratchet)
-                 ratchet=dataChannelList[i].ratchet;
-                }
-              }
-              console.log("RATCHET SEND SIGNAL JS :    "+ratchet)
-          }
-          else{
-            ratchet = localStorage.getItem("ratchet")
-            console.log("RATCHET SEND SIGNAL JS :    "+ratchet)
-          }
-          console.log("RATCHET + MESSAGE :"   + ratchet + "     " + message)
-          let ratchet_and_message_bundle = send(ratchet, message)
-          let json = JSON.parse(ratchet_and_message_bundle)
-          localStorage.setItem("ratchet",json.ratchet)
-          for (let i=0;i<dataChannelList.length;i++){
-                if (dataChannelList[i].dataChannel==dataChannel){
-                  dataChannelList[i].ratchet=localStorage.getItem("ratchet");
-                }
-              }
-         
-          console.log(json.message_bundle)
-          dataChannel.send(json.message_bundle)
-        }
-        async function decrypt_signal_js(message_bundle,dataChannel){
-          await init()
-          let ratchet;
-          if (dataChannelList.length>0){
-            for (let i=0;i<dataChannelList.length;i++){
-                if (dataChannelList[i].dataChannel==dataChannel){
-                 ratchet=dataChannelList[i].ratchet;
-                }
-              }
-              console.log("RATCHET DECRYPT SIGNAL JS :    "+ratchet)
-          }
-          else{
-            ratchet = localStorage.getItem("ratchet");
-            console.log("RATCHET SEND SIGNAL JS :    "+ratchet)
-          }
+      };
+      xhr.onerror = () => {
+        console.error(xhr.statusText);
+      };
 
-          //let ratchet = localStorage.getItem("ratchet")
-          let decrytped_and_ratchet_returned = decrypt(ratchet, message_bundle)
-          let json = JSON.parse(decrytped_and_ratchet_returned)
-          localStorage.setItem("ratchet", json.ratchet)
-          for (let i=0;i<dataChannelList.length;i++){
-                if (dataChannelList[i].dataChannel==dataChannel){
-                  dataChannelList[i].ratchet=localStorage.getItem("ratchet");
-                }
-              }
-          console.log(json.decrypted)
-          return json.decrypted
+
+    }
+
+    function parseDataBundle(response) {
+
+      localStorage.setItem("bundle_from_server", (response))
+    }
+
+    async function init_alice() {
+      await init()
+      // import('./../pkg/helloworld.js')
+      await delay(1000)
+      console.log("ALICE (caller) :->     " + username)
+      let init_alice = key_init_alice(username)
+      let json = JSON.parse(init_alice)
+
+      localStorage.setItem("alice_bundle", JSON.stringify(json))
+      let bundle_complete = localStorage.getItem("alice_bundle")
+
+      //console.log(JSON.parse(bundle_complete).bundle_keep)
+
+      postBundle(JSON.parse(bundle_complete).bundle_server)
+      console.log("INIT DONE")
+
+    }
+    async function init_bob() {
+      await init()
+
+      console.log("BOB (callee) :->     " + username)
+      let init_bob = key_init_bob(username)
+      let json = JSON.parse(init_bob)
+      localStorage.setItem("bob_bundle", JSON.stringify(json))
+      //console.log("init bob json bundle " + JSON.stringify(json.bundle_server))
+      postBundle(json.bundle_server)
+      console.log("INIT DONE")
+    }
+
+    async function master_key_alice() {
+      await init()
+
+      await delay(3000) //change to listen to storage change
+
+      await getBundleof(callee)//change to uuid from signalment server
+
+      await delay(1000) //change to listen to storage changesearch_friend
+
+      let bob_server = JSON.parse(localStorage.getItem("bundle_from_server"))
+      let alice_local = JSON.parse(localStorage.getItem("alice_bundle"))
+
+
+      console.log("BOB FROM SERVER : " + localStorage.getItem("bundle_from_server"))
+
+      let master_key_alice_part = calculate_master_key_alice(JSON.stringify(bob_server), JSON.stringify(alice_local.bundle_keep))
+      console.log(master_key_alice_part)
+      localStorage.setItem("master_key_alice_part", master_key_alice_part)
+
+
+      // console.log(json)
+    }
+    async function master_key_bob() {
+      await init()
+      await delay(3000)
+
+      await getBundleof(caller)
+
+      await delay(1000) //change to listen to storage change
+      let alice_from_server = JSON.parse(localStorage.getItem("bundle_from_server"))
+      let bob_local = JSON.parse(localStorage.getItem("bob_bundle"))
+
+      console.log("ALICE FROM SERVER  :" + localStorage.getItem("bundle_from_server"))
+
+      let master_key_bob_part = calculate_master_key_bob(JSON.stringify(bob_local.bundle_keep), JSON.stringify(alice_from_server))
+      console.log(master_key_bob_part)
+      localStorage.setItem("master_key_bob_part", master_key_bob_part)
+
+      // let json = JSON.parse(master_key_alice_part)
+      // console.log(json)
+    }
+
+    async function bob_init_ratchet_js() {
+      await init()
+      //await delay(1000)
+      let sk = localStorage.getItem("master_key_bob_part")
+      await delay(1000)
+      console.log("sk recuperer du local storage" + sk)
+      let ratchetAndPubKeyBob = bob_init_ratchet(sk)
+      let json = JSON.parse(ratchetAndPubKeyBob)
+      console.log(json)
+      localStorage.setItem("ratchet", json.ratchet)
+      localStorage.setItem("bob_pub_key_from_ratchet", json.pub_key)
+    }
+
+    async function alice_init_ratchet_js() {
+      await init()
+      await delay(1000)
+      let sk = localStorage.getItem("master_key_alice_part")
+      let public_key_bob = localStorage.getItem("bob_pub_key_from_ratchet")
+      let ratchetAlice = alice_init_ratchet(sk, public_key_bob)
+      let json = JSON.parse(ratchetAlice)
+
+      console.log(json)
+      localStorage.setItem("ratchet", json)
+
+    }
+
+    async function alice_send_js(message) {
+
+      await init()
+      let alice_ratchet = localStorage.getItem("alice_ratchet")
+      let ratchet_and_message_bundle = send(alice_ratchet, message)
+      let json = JSON.parse(ratchet_and_message_bundle)
+      localStorage.setItem("alice_ratchet", json.ratchet)
+      console.log(json.message_bundle)
+
+      let bob_ratchet = localStorage.getItem("bob_ratchet_string")
+      let steuplémarche = decrypt(bob_ratchet, json.message_bundle)
+      let json2 = JSON.parse(steuplémarche)
+      localStorage.setItem("bob_ratchet_string", json2.ratchet)
+      console.log(json2.decrypted)
+
+      //document.getElementById("message_display").innerHTML += `<p style="float: right;">${json2.decrypted}</p> </br>`
+
+    }
+
+    async function bob_send_js(message) {
+
+      await init()
+      let bob_ratchet = localStorage.getItem("bob_ratchet_string")
+      let ratchet_and_message_bundle = send(bob_ratchet, message)
+      let json = JSON.parse(ratchet_and_message_bundle)
+      localStorage.setItem("bob_ratchet_string", json.ratchet)
+      console.log(json.message_bundle)
+
+      let alice_ratchet = localStorage.getItem("alice_ratchet")
+      let steuplémarche = decrypt(alice_ratchet, json.message_bundle)
+      let json2 = JSON.parse(steuplémarche)
+      localStorage.setItem("alice_ratchet", json2.ratchet)
+      console.log(json2.decrypted)
+      document.getElementById("message_display").innerHTML += `<p>${json2.decrypted}</p> </br>`
+
+    }
+
+    async function send_signal_js(message, senderName, dataChannel) {
+      await init()
+      let ratchet;
+      console.log("AVANT LE IF")
+      if (dataChannelList.length > 0) {
+        for (let i = 0; i < dataChannelList.length; i++) {
+          console.log("datachannel [i] =  " + dataChannelList[i])
+          if (dataChannelList[i].dataChannel == dataChannel) {
+            console.log("ratchet de la data channel:     " + dataChannelList[i].ratchet)
+            ratchet = dataChannelList[i].ratchet;
+          }
         }
-        //init_alice()
-        //master_key_alice()
+        console.log("RATCHET SEND SIGNAL JS :    " + ratchet)
+      }
+      else {
+        ratchet = localStorage.getItem("ratchet")
+        console.log("RATCHET SEND SIGNAL JS :    " + ratchet)
+      }
+      console.log("RATCHET + MESSAGE :" + ratchet + "     " + message)
+      let ratchet_and_message_bundle = send(ratchet, message)
+      let json = JSON.parse(ratchet_and_message_bundle)
+      localStorage.setItem("ratchet", json.ratchet)
+      for (let i = 0; i < dataChannelList.length; i++) {
+        if (dataChannelList[i].dataChannel == dataChannel) {
+          dataChannelList[i].ratchet = localStorage.getItem("ratchet");
+        }
+      }
+
+      console.log(json.message_bundle)
+      dataChannel.send(json.message_bundle)
+    }
+    async function decrypt_signal_js(message_bundle, dataChannel) {
+      await init()
+      let ratchet;
+      if (dataChannelList.length > 0) {
+        for (let i = 0; i < dataChannelList.length; i++) {
+          if (dataChannelList[i].dataChannel == dataChannel) {
+            ratchet = dataChannelList[i].ratchet;
+          }
+        }
+        console.log("RATCHET DECRYPT SIGNAL JS :    " + ratchet)
+      }
+      else {
+        ratchet = localStorage.getItem("ratchet");
+        console.log("RATCHET SEND SIGNAL JS :    " + ratchet)
+      }
+
+      //let ratchet = localStorage.getItem("ratchet")
+      let decrytped_and_ratchet_returned = decrypt(ratchet, message_bundle)
+      let json = JSON.parse(decrytped_and_ratchet_returned)
+      localStorage.setItem("ratchet", json.ratchet)
+      for (let i = 0; i < dataChannelList.length; i++) {
+        if (dataChannelList[i].dataChannel == dataChannel) {
+          dataChannelList[i].ratchet = localStorage.getItem("ratchet");
+        }
+      }
+      console.log(json.decrypted)
+      return json.decrypted
+    }
+    //init_alice()
+    //master_key_alice()
     //########################################################-end of signal-#########################################
 
     var socket = io();
     var userName;// = "patoche" + Math.random();
     var username;
     let msg;
-        
 
-//flo
-function delay(n){
-    return new Promise(function(resolve){
-        setTimeout(resolve,n);
-    });
+
+    //flo
+    function delay(n) {
+      return new Promise(function (resolve) {
+        setTimeout(resolve, n);
+      });
     }
 
-window.onload = oninit();
-async function oninit(){
-    await delay(1000)
-   get_your_name();
-   await delay(1000)
-   putUserNameOninit()
-    
-}
+    window.onload = oninit();
+    async function oninit() {
+      await delay(1000)
+      get_your_name();
+      await delay(1000)
+      putUserNameOninit()
 
-function get_your_name() {
-    let xhr = new XMLHttpRequest();
-    //let cookie_to_send = document.cookie.substring(4,200);
-    xhr.open("GET", `https://yoloooo.com/get_your_name`, true);
-  //  xhr.setRequestHeader( "Authorization","Bearer " + cookie_to_send );
-    xhr.onload = () => {
+    }
+
+    function get_your_name() {
+      let xhr = new XMLHttpRequest();
+      //let cookie_to_send = document.cookie.substring(4,200);
+      xhr.open("GET", `https://yoloooo.com/get_your_name`, true);
+      //  xhr.setRequestHeader( "Authorization","Bearer " + cookie_to_send );
+      xhr.onload = () => {
         if (xhr.readyState === 4) {
-            if (xhr.status === 200) {
-                console.log(xhr.statusText);
-                parseData_get_your_name(xhr.responseText);
-            } else {
-                console.error(xhr.statusText);
-            }
+          if (xhr.status === 200) {
+            console.log(xhr.statusText);
+            parseData_get_your_name(xhr.responseText);
+          } else {
+            console.error(xhr.statusText);
+          }
         }
-    };
-    xhr.onerror = () => {
+      };
+      xhr.onerror = () => {
         console.error(xhr.statusText);
-    };
-    xhr.send(null);
-}
+      };
+      xhr.send(null);
+    }
 
-function parseData_get_your_name(response) {
-    let json_received = JSON.parse(response);
-    //console.log(json_received)
-    username = json_received.full_name; 
-    //console.log(json_received.id)
-    userName = username
-    
-    socket.emit("request", msg = { type: "login", name: userName });
-}
+    function parseData_get_your_name(response) {
+      let json_received = JSON.parse(response);
+      //console.log(json_received)
+      username = json_received.full_name;
+      //console.log(json_received.id)
+      userName = username
 
-
-// ALICE = CALLER 
-//BOB = CALLEE
+      socket.emit("request", msg = { type: "login", name: userName });
+    }
 
 
-function changeWhiteSpacesIntoUnderscore(word) {
-    word = word.replace(/\s+/g, '_');
-    return word;
-}
-function changeUnderscoreIntoWhiteSpaces(word) {
-    word = word.replace('_', ' ');
-    return word;
-}
-      var userList = new Array();
-      var callee;
-      var options = {
-          iceServers: [
-              {
-                  urls: "stun:stun.l.google.com:19302"
-              }
-          ]
-      }
-      var caller;
-      var pcCaller;
-      var pcCallee;
-      var dataChannel;
-      var dataChannelList = new Array();
+    // ALICE = CALLER 
+    //BOB = CALLEE
 
-var password="coucou";
-      //put the name of the client in the front 
-  async function putUserNameOninit(){
-          let divHeader = document.getElementById("friendName");
-                divHeader.innerHTML += `<div class="col-sm-8 col-xs-7 heading-name" id = "yourName">
+
+    function changeWhiteSpacesIntoUnderscore(word) {
+      word = word.replace(/\s+/g, '_');
+      return word;
+    }
+    function changeUnderscoreIntoWhiteSpaces(word) {
+      word = word.replace('_', ' ');
+      return word;
+    }
+    var userList = new Array();
+    var callee;
+    var options = {
+      iceServers: [
+        {
+          urls: "stun:stun.l.google.com:19302"
+        }
+      ]
+    }
+    var caller;
+    var pcCaller;
+    var pcCallee;
+    var dataChannel;
+    var dataChannelList = new Array();
+
+    var password = "coucou";
+    //put the name of the client in the front 
+    async function putUserNameOninit() {
+      let divHeader = document.getElementById("friendName");
+      divHeader.innerHTML += `<div class="col-sm-8 col-xs-7 heading-name" id = "yourName">
                             <a class="heading-name-meta">Hello ${userName} !
                             </a>
                           </div>
                         `;
-  }
+    }
 
-      function putUserName() {
-          document.getElementById("yourName").style.display = "initial";
+    function putUserName() {
+      document.getElementById("yourName").style.display = "initial";
     };
 
-      //envoie msg 
+    //envoie msg 
 
-let SendButton = document.getElementById("messageInput");
-SendButton.addEventListener("change", e => {
-    let divMessage = document.getElementById("messageInput");
-    displayMessageToSend(dataChannel, divMessage.value);
-    if (dataChannelList.length > 0) {
+    let SendButton = document.getElementById("messageInput");
+    SendButton.addEventListener("change", e => {
+      let divMessage = document.getElementById("messageInput");
+      displayMessageToSend(dataChannel, divMessage.value);
+      if (dataChannelList.length > 0) {
         for (let i = 0; i < dataChannelList.length; i++)
-            sendMessage(dataChannelList[i].dataChannel, divMessage.value, userName);
-    }
-    else {
+          sendMessage(dataChannelList[i].dataChannel, divMessage.value, userName);
+      }
+      else {
         sendMessage(dataChannel, divMessage.value, userName);
-    }
+      }
 
-    divMessage.value = "";
-});
+      divMessage.value = "";
+    });
 
 
 
-async function deleteMessages(convName) {
-    //remove messages and hide the quit button 
-    let messages = "";
-    let divMsg = document.getElementById("messages");
-    //console.log(divMsg);
-    let divMessages = document.getElementsByClassName("message-text");
-    for (let i = 0; i < divMessages.length; i++) {
+    async function deleteMessages(convName) {
+      //remove messages and hide the quit button 
+      let messages = "";
+      let divMsg = document.getElementById("messages");
+      //console.log(divMsg);
+      let divMessages = document.getElementsByClassName("message-text");
+      for (let i = 0; i < divMessages.length; i++) {
         //console.log(divMessages[i].parentElement.children);
         if (divMessages[i].parentNode.className == "receiver") {
-            // console.log(divMessages[i].textContent.trimStart());
-            messages += "$£€/receiv/";
+          // console.log(divMessages[i].textContent.trimStart());
+          messages += "$£€/receiv/";
         }
         else if (divMessages[i].parentNode.className == "sender") {
-            messages += "$£€/sender/";
+          messages += "$£€/sender/";
         }
         let message = divMessages[i].textContent.trimStart().trimEnd();
         messages += message;
 
-    }
+      }
 
-    console.log(messages);
-    divMsg.parentNode.removeChild(divMsg);
-    document.getElementById("button_quit").parentNode.removeChild(document.getElementById("button_quit"))    
-    let divConvo = document.getElementById("conversation");
-    divConvo.innerHTML += `<div id="messages"></div>`;
-    document.getElementById("logo_title").style.display = "initial";
-    let JSONToSave = await send_crypted_message(messages, password, convName, userName);
-    let loadedMessages = await extract_from_JSON(JSONToSave, password);
-    displayLoadedConversation(loadedMessages);
-    return messages;
-};
+      console.log(messages);
+      divMsg.parentNode.removeChild(divMsg);
+      document.getElementById("button_quit").parentNode.removeChild(document.getElementById("button_quit"))
+      let divConvo = document.getElementById("conversation");
+      divConvo.innerHTML += `<div id="messages"></div>`;
+      document.getElementById("logo_title").style.display = "initial";
+      let JSONToSave = await send_crypted_message(messages, password, convName, userName);
+      let loadedMessages = await extract_from_JSON(JSONToSave, password);
+      displayLoadedConversation(loadedMessages);
+      return messages;
+    };
 
 
-function displayLoadedConversation(messages) {
-    let messagesToDisplay = messages.split("$£€");
-    messagesToDisplay.forEach(message => {
+    function displayLoadedConversation(messages) {
+      let messagesToDisplay = messages.split("$£€");
+      messagesToDisplay.forEach(message => {
         if (message.slice(0, 8) == "/receiv/") {
-            //Afficher le message.slice(8) avec la classe receiver
-            let divMsg = document.getElementById("messages");
-            divMsg.innerHTML += `
+          //Afficher le message.slice(8) avec la classe receiver
+          let divMsg = document.getElementById("messages");
+          divMsg.innerHTML += `
             <div class="row message-body">
                 <div class="col-sm-12 message-main-receiver">
                     <div class="receiver">
@@ -431,13 +432,13 @@ function displayLoadedConversation(messages) {
                 </div>
             </div>
             `;
-            //console.log(message.slice(8));
+          //console.log(message.slice(8));
         }
         else if (message.slice(0, 8) == "/sender/") {
-            //Afficher le message.slice(8) avec la classe sender
-            //PAS OUF LE COPIE COLLE 
-            let divMsg = document.getElementById("messages");
-            divMsg.innerHTML += `
+          //Afficher le message.slice(8) avec la classe sender
+          //PAS OUF LE COPIE COLLE 
+          let divMsg = document.getElementById("messages");
+          divMsg.innerHTML += `
             <div class="row message-body">
                 <div class="col-sm-12 message-main-sender">
                     <div class="sender">
@@ -448,35 +449,35 @@ function displayLoadedConversation(messages) {
                 </div>
             </div>
             `;
-            //console.log(message.slice(8));
+          //console.log(message.slice(8));
         }
-    });
-};
+      });
+    };
 
 
-      function messageReceive(dataChannel) {
-          dataChannel.addEventListener("message", async event => {
-            // if (event.data == 'init message signal'){
+    function messageReceive(dataChannel) {
+      dataChannel.addEventListener("message", async event => {
+        // if (event.data == 'init message signal'){
 
-            // }
-            if (event.data.slice(0,6) == '{"kty"'){
-              localStorage.setItem("bob_pub_key_from_ratchet", event.data)
-              console.log("bob_pub_key_from_ratchet" +  event.data)
-              await alice_init_ratchet_js()
-              for (let i=0;i<dataChannelList.length;i++){
-                if (dataChannelList[i].dataChannel==dataChannel){
-                  dataChannelList[i].ratchet=localStorage.getItem("ratchet");
-                }
-              }
-              await send_signal_js("init message signal","alice",dataChannel)
+        // }
+        if (event.data.slice(0, 6) == '{"kty"') {
+          localStorage.setItem("bob_pub_key_from_ratchet", event.data)
+          console.log("bob_pub_key_from_ratchet" + event.data)
+          await alice_init_ratchet_js()
+          for (let i = 0; i < dataChannelList.length; i++) {
+            if (dataChannelList[i].dataChannel == dataChannel) {
+              dataChannelList[i].ratchet = localStorage.getItem("ratchet");
             }
-            else{
-              //let ratchet = localStorage.getItem("ratchet")
-              let message_decrypted = await decrypt_signal_js(event.data,dataChannel);
-              console.log("Message decrypted : " + message_decrypted);
-              console.log("Message received : " + event.data);
-              let divMsg = document.getElementById("messages");
-              divMsg.innerHTML += `
+          }
+          await send_signal_js("init message signal", "alice", dataChannel)
+        }
+        else {
+          //let ratchet = localStorage.getItem("ratchet")
+          let message_decrypted = await decrypt_signal_js(event.data, dataChannel);
+          console.log("Message decrypted : " + message_decrypted);
+          console.log("Message received : " + event.data);
+          let divMsg = document.getElementById("messages");
+          divMsg.innerHTML += `
               <div class="row message-body">
                   <div class="col-sm-12 message-main-receiver">
                       <div class="receiver">
@@ -487,22 +488,22 @@ function displayLoadedConversation(messages) {
                   </div>
               </div>
               `;
-              if (dataChannelList.length > 0) {
+          if (dataChannelList.length > 0) {
             for (let i = 0; i < dataChannelList.length; i++) {
-                if (dataChannelList[i].dataChannel != dataChannel) {
-                  console.log("POUR DELAY MEsSAGE:")
-                  console.log(dataChannelList[i].dataChannel)
-                    sendMessage(dataChannelList[i].dataChannel,message_decrypted,"tekas")
-                    //dataChannelList[i].dataChannel.send(message_decrypted);
-                }
+              if (dataChannelList[i].dataChannel != dataChannel) {
+                console.log("POUR DELAY MEsSAGE:")
+                console.log(dataChannelList[i].dataChannel)
+                sendMessage(dataChannelList[i].dataChannel, message_decrypted, "tekas")
+                //dataChannelList[i].dataChannel.send(message_decrypted);
+              }
             }
+          }
         }
-            }
-          });
-      }
+      });
+    }
 
-function displayMessageToSend(dataChannel, message) {
-    if (dataChannel.readyState == "open") {
+    function displayMessageToSend(dataChannel, message) {
+      if (dataChannel.readyState == "open") {
         let divMsg = document.getElementById("messages");
         divMsg.innerHTML += `
         <div class="row message-body">
@@ -515,20 +516,20 @@ function displayMessageToSend(dataChannel, message) {
             </div>
         </div>
         `;
-    }
+      }
     }
 
-function sendMessage(dataChannel, message, senderName) {
-    if (dataChannel.readyState === "open") {
-      send_signal_js(message,senderName,dataChannel)
-       // dataChannel.send(senderName + " : " + message);
-    }
-};
-   
-function displayOffer(senderName) {
-    console.log("Sender name :" + senderName);
-    let divModal = document.getElementById("modal");
-    divModal.innerHTML += `<div id="offer" class="modal">
+    function sendMessage(dataChannel, message, senderName) {
+      if (dataChannel.readyState === "open") {
+        send_signal_js(message, senderName, dataChannel)
+        // dataChannel.send(senderName + " : " + message);
+      }
+    };
+
+    function displayOffer(senderName) {
+      console.log("Sender name :" + senderName);
+      let divModal = document.getElementById("modal");
+      divModal.innerHTML += `<div id="offer" class="modal">
         <div class="modal-dialog">
           <div class="modal-content">
            <div class="total">
@@ -541,9 +542,9 @@ function displayOffer(senderName) {
         `;
 
 
-    let divHeader = document.getElementById("friendName");
-    document.getElementById("yourName").style.display = "none";
-    divHeader.innerHTML += `<div class="col-sm-8 col-xs-7 heading-name" id ="userName">
+      let divHeader = document.getElementById("friendName");
+      document.getElementById("yourName").style.display = "none";
+      divHeader.innerHTML += `<div class="col-sm-8 col-xs-7 heading-name" id ="userName">
             <a class="heading-name-meta">${senderName}
             </a>
             <spa>Online</span>
@@ -551,27 +552,27 @@ function displayOffer(senderName) {
           <button class="btn btn-secondary pull-right"id="button_quit">Quitter la conversation</button>
           `;
 
-};
+    };
 
-function searchFriend() {
-    let divModal = document.getElementById("modal");
-    divModal.innerHTML += `<div id="addFriendPopUp" class="modal">
+    function searchFriend() {
+      let divModal = document.getElementById("modal");
+      divModal.innerHTML += `<div id="addFriendPopUp" class="modal">
       <div class="searchConv">
             <button type="button" class="element-head" aria-label="Close" id="button_quit_search">
                 <span aria-hidden="true">&times;</span>
             </button>
             <input id="searchbar" onkeyup="search_your_friend()" type="text" name="search" placeholder="Search a friend..">
-            <div id="result_search_friend">
+            <ul id="result_search_friend">
 
-            </div>
+            </ul>
         </div>
            
     </div>`
-}
+    }
 
-function displayWaiting(senderName) {
-    let divModal = document.getElementById("modal");
-    divModal.innerHTML += `<div id="offer2" class="modal" >
+    function displayWaiting(senderName) {
+      let divModal = document.getElementById("modal");
+      divModal.innerHTML += `<div id="offer2" class="modal" >
                     <div class="modal-dialog">
                         <div class="modal-content">
                           <button type="button" class="element-head" aria-label="Close" id="button_quit_waiting">
@@ -581,22 +582,22 @@ function displayWaiting(senderName) {
                         </div >
                         `;
 
-                        let divHeader = document.getElementById("friendName");
-    document.getElementById("yourName").style.display = "none";
-    if (dataChannelList.length < 1) {
+      let divHeader = document.getElementById("friendName");
+      document.getElementById("yourName").style.display = "none";
+      if (dataChannelList.length < 1) {
         divHeader.innerHTML += `<div class="col-sm-8 col-xs-7 heading-name" id="userName">
             <a class="heading-name-meta">${senderName}
             </a>
             <span>Online</span>
         </div>
         <button class="btn btn-secondary pull-right" id="button_quit">Quitter la conversation</button>`
-        ;
+          ;
 
+      };
     };
-};
-function displayDecline() {
-    let divModal = document.getElementById("modal");
-    divModal.innerHTML += `<div id="offer1" class="modal">
+    function displayDecline() {
+      let divModal = document.getElementById("modal");
+      divModal.innerHTML += `<div id="offer1" class="modal">
         <div class="modal-dialog">
             <div class="modal-content">
                 <button type="button" class="element-head" aria-label="Close" id ="button_quit_decline">
@@ -605,13 +606,13 @@ function displayDecline() {
                 <header class="modalContainer"> Offer declined, maybe he doesn't like you ...</header>
             </div >
             `;
-};
+    };
 
 
-function displayOldConv() {
-    let divModal = document.getElementById("modal");
-    //quand je met un id a old Conv ca casse tout donc pas de boutton pour linstant 
-    divModal.innerHTML += `<div class="oldConv" id="oldConvo">
+    function displayOldConv() {
+      let divModal = document.getElementById("modal");
+      //quand je met un id a old Conv ca casse tout donc pas de boutton pour linstant 
+      divModal.innerHTML += `<div class="oldConv" id="oldConvo">
                             <button type="button" class="element-head" aria-label="Close" id="button_quit_conv">
                             <span aria-hidden="true">&times;</span>
                             </button>
@@ -625,27 +626,27 @@ function displayOldConv() {
                                     </div>
                                 </div>
                         </div>`
-}
-function hideDecline() {
-    const offer1 = document.getElementById("offer1");
-    offer1.parentNode.removeChild(offer1);
-};
+    }
+    function hideDecline() {
+      const offer1 = document.getElementById("offer1");
+      offer1.parentNode.removeChild(offer1);
+    };
 
 
-      var cells = document.getElementById("cells");
-      socket.on("getUsers", users => {
-          for (let i = 0; i < users.length; i++) {
-              addUsers(users[i]);
-          }
-      });
+    var cells = document.getElementById("cells");
+    socket.on("getUsers", users => {
+      for (let i = 0; i < users.length; i++) {
+        addUsers(users[i]);
+      }
+    });
 
-      function addUsers(user) {
-          userList.push(user);
+    function addUsers(user) {
+      userList.push(user);
 
-          let id = userList.length;
-          //Add to the list of user on the UI 
-          let contactList = document.getElementById("friends");
-          contactList.innerHTML += `
+      let id = userList.length;
+      //Add to the list of user on the UI 
+      let contactList = document.getElementById("friends");
+      contactList.innerHTML += `
               <div class="row sideBar-body" id="${user}">
                   <div class="col-sm-3 col-xs-3 sideBar-avatar">
                       <div class="avatar-icon">
@@ -665,20 +666,20 @@ function hideDecline() {
               `;
       //   console.log(contactList);
 
-      };
-      function deleteUser(user) {
-    for (let i = 0; i < userList.length; i++) {
+    };
+    function deleteUser(user) {
+      for (let i = 0; i < userList.length; i++) {
 
         if (userList[i] == user) {
 
-            userList.splice(i, 1);
+          userList.splice(i, 1);
         }
-    }
-    let userToDelete = document.getElementById(user);
-    userToDelete.parentNode.removeChild(userToDelete);
-};
-function whatchForClosing(dataChannel, convName) {
-    dataChannel.addEventListener("close", ev => {
+      }
+      let userToDelete = document.getElementById(user);
+      userToDelete.parentNode.removeChild(userToDelete);
+    };
+    function whatchForClosing(dataChannel, convName) {
+      dataChannel.addEventListener("close", ev => {
         console.log(dataChannel.readyState);
         let divName = document.getElementById("userName");
         divName.parentNode.removeChild(divName);
@@ -688,278 +689,278 @@ function whatchForClosing(dataChannel, convName) {
         document.getElementsByClassName("offerButton").disabled = false;
 
 
-    });
+      });
 
-};
-function closeDc(dataChannel) {
-    let quitButton = document.getElementById("button_quit");
-    quitButton.addEventListener("click", e => {
-      if (dataChannelList.length > 0) {
-            for (let i = 0; i < dataChannelList.length; i++) {
-                dataChannelList[i].dataChannel.close();
-                dataChannelList.splice(i, 1);
-            }
+    };
+    function closeDc(dataChannel) {
+      let quitButton = document.getElementById("button_quit");
+      quitButton.addEventListener("click", e => {
+        if (dataChannelList.length > 0) {
+          for (let i = 0; i < dataChannelList.length; i++) {
+            dataChannelList[i].dataChannel.close();
+            dataChannelList.splice(i, 1);
+          } riend
         }
         else {
-            dataChannel.close();
+          dataChannel.close();
         }
 
+      });
+
+    };
+
+
+
+    socket.on("userLeave", user => {
+      deleteUser(user);
+      console.log(user);
     });
 
-};
+    socket.on("newUser", user => {
+      addUsers(user);
+      //console.log(user);
+    });
 
+    socket.on("connectedUsers", usersAlreadyConnected => {
+      for (let i = 0; i < usersAlreadyConnected.length; i++) {
+        addUsers(usersAlreadyConnected[i]);
+      }
+    });
 
+    //'''''''''''''''''''''''''''Caller side''''''''''''''''''''''''''''''''//
 
-socket.on("userLeave", user => {
-    deleteUser(user);
-    console.log(user);
-});
+    // callee accepted the offer 
+    socket.on("answer", async receiverName => {
+      //création sdp et envoi de sdp puis de ICE
+      //côté caller
+      callee = receiverName;
+      console.log("Connexion accepté de :" + receiverName);
+      document.getElementById("offer2").parentNode.removeChild(document.getElementById("offer2"));
 
-      socket.on("newUser", user => {
-          addUsers(user);
-          //console.log(user);
-      });
+      //Creating the caller peer connection and his sdp
 
-      socket.on("connectedUsers", usersAlreadyConnected => {
-          for (let i = 0; i < usersAlreadyConnected.length; i++) {
-              addUsers(usersAlreadyConnected[i]);
-          }
-      });
+      pcCaller = new RTCPeerConnection();
+      dataChannel = pcCaller.createDataChannel(receiverName);
+      let dataChannelInfo = {
+        dataChannel: dataChannel,
+        ratchet: ""
+      };
+      //    dataChannelList.push(dataChannel);
+      dataChannelList.push(dataChannelInfo);
 
-      //'''''''''''''''''''''''''''Caller side''''''''''''''''''''''''''''''''//
-
-      // callee accepted the offer 
-      socket.on("answer", async receiverName => {
-          //création sdp et envoi de sdp puis de ICE
-          //côté caller
-          callee = receiverName;
-          console.log("Connexion accepté de :" + receiverName);
-          document.getElementById("offer2").parentNode.removeChild(document.getElementById("offer2"));
-
-    //Creating the caller peer connection and his sdp
-
-    pcCaller = new RTCPeerConnection();
-    dataChannel = pcCaller.createDataChannel(receiverName);
-    let dataChannelInfo={
-      dataChannel:dataChannel,
-      ratchet:""
-    };
-//    dataChannelList.push(dataChannel);
-    dataChannelList.push(dataChannelInfo);
-
-    pcCaller.addEventListener('connectionstatechange', event => {
+      pcCaller.addEventListener('connectionstatechange', event => {
         console.log("connection ?")
         if (pcCaller.connectionState === 'connected') {
-            // Peers connected!
-            //for (let i = 0; i < dataChannelList.length; i++)
-            //messageReceive(dataChannelList[i]);
-            //TEST
-            //messageReceive(dataChannel);
-            console.log("GGWP peers connected!");
-        }
-    });
-
-
-    whatchForClosing(dataChannel,callee);
-    closeDc(dataChannel);
-
-
-
-          var CallerSdp = await pcCaller.createOffer({ iceRestart: true });
-          //Sending the caller sdp to the callee  
-          socket.emit("request", { type: "sdpCaller", name: receiverName, sdp: CallerSdp, dc: dataChannel })
-          //Setting the caller (his) local description
-          await pcCaller.setLocalDescription(CallerSdp);
-      });
-
-socket.on("decline", async ev => {
-    document.getElementById("offer2").parentNode.removeChild(document.getElementById("offer2"));
-    displayDecline();
-    const quitDecline = document.getElementById("button_quit_decline");
-    quitDecline.addEventListener("click", e => {
-        hideDecline();
-    });
-    let div = document.getElementById("userName");
-    div.parentNode.removeChild(div);
-    let button_quit = document.getElementById("button_quit");
-    button_quit.parentNode.removeChild(button_quit);
-    putUserName();
-
-});
-      //Waiting for callee sdp 
-
-      // when callee send spd info
-      socket.on("calleeSdp", async calleeSdp => {
-          //Caller set callee description
-          const remoteDesc = new RTCSessionDescription(calleeSdp);
-         // console.log(pcCaller.iceGatheringState);
-          await pcCaller.setRemoteDescription(remoteDesc);
-          //console.log("callee descripiton set");
-          //console.log(remoteDesc);
-
-          //navigator.mediaDevices.getUserMedia({ audio: true, video: true });
-          //pcCaller.addStream(localStream);
-
-          //Then 
-          //Caller listen to his peerconnection for some icecandidate and when one is found the caller send it to the callee 
-
-          //console.log(pcCaller.iceGatheringState);
-
-
-
-          pcCaller.addEventListener('icecandidate', event => {
-
-              if (event.candidate != null) {
-                  //console.log("ice candidate found");
-                  //console.log(event.candidate);
-                  socket.emit("request", { type: 'iceCandidateToCallee', name: callee, candidate: event.candidate });
-              }
-          });
-
-          socket.on("quitWaiting", e => {
-            let offer = document.getElementById("offer");
-            offer.parentNode.removeChild(offer);
-            let button_quit = document.getElementById("button_quit");
-            button_quit.parentNode.removeChild(button_quit);
-            let div = document.getElementById("userName");
-            div.parentNode.removeChild(div);
-            putUserName();
-        });
-
-          //-------------------------------------------------------INIT----------------------------
-          dataChannel.addEventListener("open",async ev => {
-            console.log("data channel D'ALICE")
-            console.log(dataChannel)
-            await init_alice()
-            // delay(1000)
-            await master_key_alice()
-              const readyState = dataChannel.readyState;
-              console.log("Send channel state is: " + readyState);
-              //sendMessage(dataChannel, "coucou bro 2");
-              messageReceive(dataChannel)
-          });
-          dataChannel.addEventListener("error", ev => {
-              console.log(ev);
-          });
-
-
-
-
-          // Listen for connectionstatechange on the local RTCPeerConnection
-
-
-
-      });
-
-
-
-      socket.on('calleeIceCandidate', async calleeIceCandidate => {
-          //console.log(calleeIceCandidate);
-          if (calleeIceCandidate) {
-              //Try to add the caller ice candidate 
-              try {
-                  await pcCaller.addIceCandidate(calleeIceCandidate);
-                 // console.log("callee ice cadidate added");
-              } catch (e) {
-                  console.error('Error adding received ice candidate', e);
-              }
-          }
-      });
-
-
-      //-----------------------------Callee side----------------------------------//
-
-      // callee received an offer from the caller 
-      socket.on("offer", senderName => {
-          //console.log("Demande de connexion de:" + senderName);
-          displayOffer(senderName);
-          //cells.innerHTML += `<button class=acceptButton id = ${senderName}> Accept offer send by:${senderName}</button >`;
-      });
-
-
-      //receiving a peerConnection offer from the caller (send by the signaling server)
-      socket.on("pcOffer", async (callerSdp, dc) => {
-          //creating the callee peer connection
-          pcCallee = new RTCPeerConnection();
-          // dataChannel = dc;
-          // console.log(dc);
-          pcCallee.addEventListener("datachannel",async ev => {
-              dataChannel = ev.channel;
-
-              //callee INIT KEY
-             
-            init_bob()
-            await master_key_bob()
-            console.log(" master ?  "+localStorage.getItem("master_key_bob_part"))
-            await bob_init_ratchet_js()
-            console.log("bob_pub_key_from_ratchet; " +  localStorage.getItem("bob_pub_key_from_ratchet"))
-            dataChannel.send(localStorage.getItem("bob_pub_key_from_ratchet"))
-            
-
-              console.log("datachannel ? : ");
-              console.log(dataChannel);
-              //RATCHET INIT COTE BOB -> pub key send
-              //sendMessage(dataChannel, "");
-              messageReceive(dataChannel); //si ca commence par ""
-              whatchForClosing(dataChannel,caller);
-              closeDc(dataChannel);
-
-          }, false);
+          // Peers connected!
+          //for (let i = 0; i < dataChannelList.length; i++)
+          //messageReceive(dataChannelList[i]);
+          //TEST
           //messageReceive(dataChannel);
-          //Setting the caller sdp description
-          await pcCallee.setRemoteDescription(callerSdp);
-        //  console.log("caller description set:");
-          //console.log(callerSdp);
-
-          pcCallee.addEventListener('icecandidate', event => {
-
-              if (event.candidate != null) {
-                 // console.log("ice candidate found");
-                 // console.log(event.candidate);
-                  socket.emit("request", { type: 'iceCandidateToCaller', name: caller, candidate: event.candidate });
-              }
-          });
-         
-          //Creating the callee sdp answer 
-          var calleeSdp = await pcCallee.createAnswer();
-          pcCallee.setLocalDescription(calleeSdp);
-
-          //Sending the callee sdp to the caller 
-          socket.emit("request", { type: "sdpCallee", name: caller, sdp: calleeSdp })
-
-      });
-
-      //Signaling server emiting caller ice candidate 
-      socket.on('callerIceCandidate', async callerIceCandidate => {
-         // console.log(callerIceCandidate);
-          if (callerIceCandidate) {
-              //Try to add the caller ice candidate 
-              try {
-                  await pcCallee.addIceCandidate(callerIceCandidate);
-                 // console.log("caller ice cadidate added");
-              } catch (e) {
-                  console.error('Error adding received ice candidate', e);
-              }
-          }
-
-          // searching for callee candidate 
-
+          console.log("GGWP peers connected!");
+        }
       });
 
 
+      whatchForClosing(dataChannel, callee);
+      closeDc(dataChannel);
 
 
-      /////////////////////////////////////////////////////////////////////////////////////////
 
-   
+      var CallerSdp = await pcCaller.createOffer({ iceRestart: true });
+      //Sending the caller sdp to the callee  
+      socket.emit("request", { type: "sdpCaller", name: receiverName, sdp: CallerSdp, dc: dataChannel })
+      //Setting the caller (his) local description
+      await pcCaller.setLocalDescription(CallerSdp);
+    });
 
-      const acceptButton = document.getElementsByClassName("Accept");
-      const declineButton = document.getElementsByClassName("acceptButton");
-const searchButton = document.getElementById("buttonAdd");
-const convButton = document.getElementById("buttonConv");
+    socket.on("decline", async ev => {
+      document.getElementById("offer2").parentNode.removeChild(document.getElementById("offer2"));
+      displayDecline();
+      const quitDecline = document.getElementById("button_quit_decline");
+      quitDecline.addEventListener("click", e => {
+        hideDecline();
+      });
+      let div = document.getElementById("userName");
+      div.parentNode.removeChild(div);
+      let button_quit = document.getElementById("button_quit");
+      button_quit.parentNode.removeChild(button_quit);
+      putUserName();
 
-document.addEventListener('click', function (e) {
-    if (e.target && e.target.className == 'offerButton') {
+    });
+    //Waiting for callee sdp 
+
+    // when callee send spd info
+    socket.on("calleeSdp", async calleeSdp => {
+      //Caller set callee description
+      const remoteDesc = new RTCSessionDescription(calleeSdp);
+      // console.log(pcCaller.iceGatheringState);
+      await pcCaller.setRemoteDescription(remoteDesc);
+      //console.log("callee descripiton set");
+      //console.log(remoteDesc);
+
+      //navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+      //pcCaller.addStream(localStream);
+
+      //Then 
+      //Caller listen to his peerconnection for some icecandidate and when one is found the caller send it to the callee 
+
+      //console.log(pcCaller.iceGatheringState);
+
+
+
+      pcCaller.addEventListener('icecandidate', event => {
+
+        if (event.candidate != null) {
+          //console.log("ice candidate found");
+          //console.log(event.candidate);
+          socket.emit("request", { type: 'iceCandidateToCallee', name: callee, candidate: event.candidate });
+        }
+      });
+
+      socket.on("quitWaiting", e => {
+        let offer = document.getElementById("offer");
+        offer.parentNode.removeChild(offer);
+        let button_quit = document.getElementById("button_quit");
+        button_quit.parentNode.removeChild(button_quit);
+        let div = document.getElementById("userName");
+        div.parentNode.removeChild(div);
+        putUserName();
+      });
+
+      //-------------------------------------------------------INIT----------------------------
+      dataChannel.addEventListener("open", async ev => {
+        console.log("data channel D'ALICE")
+        console.log(dataChannel)
+        await init_alice()
+        // delay(1000)
+        await master_key_alice()
+        const readyState = dataChannel.readyState;
+        console.log("Send channel state is: " + readyState);
+        //sendMessage(dataChannel, "coucou bro 2");
+        messageReceive(dataChannel)
+      });
+      dataChannel.addEventListener("error", ev => {
+        console.log(ev);
+      });
+
+
+
+
+      // Listen for connectionstatechange on the local RTCPeerConnection
+
+
+
+    });
+
+
+
+    socket.on('calleeIceCandidate', async calleeIceCandidate => {
+      //console.log(calleeIceCandidate);
+      if (calleeIceCandidate) {
+        //Try to add the caller ice candidate 
+        try {
+          await pcCaller.addIceCandidate(calleeIceCandidate);
+          // console.log("callee ice cadidate added");
+        } catch (e) {
+          console.error('Error adding received ice candidate', e);
+        }
+      }
+    });
+
+
+    //-----------------------------Callee side----------------------------------//
+
+    // callee received an offer from the caller 
+    socket.on("offer", senderName => {
+      //console.log("Demande de connexion de:" + senderName);
+      displayOffer(senderName);
+      //cells.innerHTML += `<button class=acceptButton id = ${senderName}> Accept offer send by:${senderName}</button >`;
+    });
+
+
+    //receiving a peerConnection offer from the caller (send by the signaling server)
+    socket.on("pcOffer", async (callerSdp, dc) => {
+      //creating the callee peer connection
+      pcCallee = new RTCPeerConnection();
+      // dataChannel = dc;
+      // console.log(dc);
+      pcCallee.addEventListener("datachannel", async ev => {
+        dataChannel = ev.channel;
+
+        //callee INIT KEY
+
+        init_bob()
+        await master_key_bob()
+        console.log(" master ?  " + localStorage.getItem("master_key_bob_part"))
+        await bob_init_ratchet_js()
+        console.log("bob_pub_key_from_ratchet; " + localStorage.getItem("bob_pub_key_from_ratchet"))
+        dataChannel.send(localStorage.getItem("bob_pub_key_from_ratchet"))
+
+
+        console.log("datachannel ? : ");
+        console.log(dataChannel);
+        //RATCHET INIT COTE BOB -> pub key send
+        //sendMessage(dataChannel, "");
+        messageReceive(dataChannel); //si ca commence par ""
+        whatchForClosing(dataChannel, caller);
+        closeDc(dataChannel);
+
+      }, false);
+      //messageReceive(dataChannel);
+      //Setting the caller sdp description
+      await pcCallee.setRemoteDescription(callerSdp);
+      //  console.log("caller description set:");
+      //console.log(callerSdp);
+
+      pcCallee.addEventListener('icecandidate', event => {
+
+        if (event.candidate != null) {
+          // console.log("ice candidate found");
+          // console.log(event.candidate);
+          socket.emit("request", { type: 'iceCandidateToCaller', name: caller, candidate: event.candidate });
+        }
+      });
+
+      //Creating the callee sdp answer 
+      var calleeSdp = await pcCallee.createAnswer();
+      pcCallee.setLocalDescription(calleeSdp);
+
+      //Sending the callee sdp to the caller 
+      socket.emit("request", { type: "sdpCallee", name: caller, sdp: calleeSdp })
+
+    });
+
+    //Signaling server emiting caller ice candidate 
+    socket.on('callerIceCandidate', async callerIceCandidate => {
+      // console.log(callerIceCandidate);
+      if (callerIceCandidate) {
+        //Try to add the caller ice candidate 
+        try {
+          await pcCallee.addIceCandidate(callerIceCandidate);
+          // console.log("caller ice cadidate added");
+        } catch (e) {
+          console.error('Error adding received ice candidate', e);
+        }
+      }
+
+      // searching for callee candidate 
+
+    });
+
+
+
+
+    /////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+    const acceptButton = document.getElementsByClassName("Accept");
+    const declineButton = document.getElementsByClassName("acceptButton");
+    const searchButton = document.getElementById("buttonAdd");
+    const convButton = document.getElementById("buttonConv");
+
+    document.addEventListener('click', function (e) {
+      if (e.target && e.target.className == 'offerButton') {
         //Caller sending his offer to the callee 
         socket.emit("request", { type: "offer", name: e.target.id });
         console.log(e.target.id);
@@ -967,17 +968,17 @@ document.addEventListener('click', function (e) {
         displayWaiting(e.target.id);
         const quitwaiting = document.getElementById("button_quit_waiting");
         quitwaiting.addEventListener("click", event => {
-            document.getElementById("offer2").parentNode.removeChild(document.getElementById("offer2"));
-            document.getElementById("logo_title").style.display = "initial";
-            let button_quit = document.getElementById("button_quit");
-            button_quit.parentNode.removeChild(button_quit);
-            socket.emit("request", { type: 'quitWaiting', name: e.target.id });
+          document.getElementById("offer2").parentNode.removeChild(document.getElementById("offer2"));
+          document.getElementById("logo_title").style.display = "initial";
+          let button_quit = document.getElementById("button_quit");
+          button_quit.parentNode.removeChild(button_quit);
+          socket.emit("request", { type: 'quitWaiting', name: e.target.id });
         });
 
 
         document.getElementById("logo_title").style.display = "none";
-    }
-    if (e.target && e.target.className == 'acceptButton') {
+      }
+      if (e.target && e.target.className == 'acceptButton') {
         document.getElementById("offer").parentNode.removeChild(document.getElementById("offer"))
         //callee accepted the offer and sending back his answer to the caller 
         socket.emit("request", { type: "answer", name: changeUnderscoreIntoWhiteSpaces(e.target.id) });
@@ -989,9 +990,9 @@ document.addEventListener('click', function (e) {
 
 
 
-    };
-    //handle decline offer
-    if (e.target && e.target.className == 'declineButton') {
+      };
+      //handle decline offer
+      if (e.target && e.target.className == 'declineButton') {
         document.getElementById("offer").parentNode.removeChild(document.getElementById("offer"));
         socket.emit("request", { type: "decline", name: changeUnderscoreIntoWhiteSpaces(e.target.id) });
         let button_quit = document.getElementById("button_quit");
@@ -1001,34 +1002,34 @@ document.addEventListener('click', function (e) {
         putUserName();
 
 
-    };
+      };
 
-});
+    });
 
 
-searchButton.addEventListener("click", e => {
-    searchFriend();
-    const quitDecline = document.getElementById("button_quit_search");
-    quitDecline.addEventListener("click", e => {
+    searchButton.addEventListener("click", e => {
+      searchFriend();
+      const quitDecline = document.getElementById("button_quit_search");
+      quitDecline.addEventListener("click", e => {
         let search = document.getElementById("addFriendPopUp");
         search.parentNode.removeChild(search);
+      });
     });
-});
 
-  
+
     convButton.addEventListener("click", e => {
-    displayOldConv();
-    const quitConv = document.getElementById("button_quit_conv");
-    quitConv.addEventListener("click", e => {
+      displayOldConv();
+      const quitConv = document.getElementById("button_quit_conv");
+      quitConv.addEventListener("click", e => {
         let conv = document.getElementById("oldConvo");
         conv.parentNode.removeChild(conv);
+      });
     });
-});
 
 
-   </script>
+  </script>
 
-   
+
 </head>
 
 <body>
@@ -1065,7 +1066,7 @@ searchButton.addEventListener("click", e => {
             <span class="material-symbols-outlined" id="buttonAdd">
               person_add
             </span>
-            <span class="material-symbols-outlined" >
+            <span class="material-symbols-outlined">
               logout
             </span>
             <span class="material-symbols-outlined" id="buttonConv">
@@ -1204,40 +1205,40 @@ searchButton.addEventListener("click", e => {
 
 </body>
 <script>
-let url = "https://yoloooo.com";
+  let url = "https://yoloooo.com";
 
 
-window.addEventListener("unload", e => {
+  window.addEventListener("unload", e => {
     console.log("jme tire");
     //socket.emit("deconnect");
-    socket.emit("request",{type:"deconnect"});
+    socket.emit("request", { type: "deconnect" });
     //e.preventDefault();
-    });
-    
-function search_your_friend() {
-  console.log("dans search friend")
+  });
+
+  function search_your_friend() {
+    console.log("dans search friend")
     const val = document.querySelector('input').value;
     console.log(val);
     let xhr = new XMLHttpRequest();
     xhr.open("GET", url + `/get_users/` + val, false);
     xhr.onload = () => {
-        if (xhr.readyState === 4) {
-            if (xhr.status === 200) {
-                console.log(xhr.statusText);
-                parseData(xhr.responseText);
-            } else {
-                console.error(xhr.statusText);
-            }
+      if (xhr.readyState === 4) {
+        if (xhr.status === 200) {
+          console.log(xhr.statusText);
+          parseData(xhr.responseText);
+        } else {
+          console.error(xhr.statusText);
         }
+      }
     };
     xhr.onerror = () => {
-        console.error(xhr.statusText);
+      console.error(xhr.statusText);
     };
     xhr.send(null);
-};
-//detecte le
+  };
+  //detecte le
 
-function parseData(response) {
+  function parseData(response) {
     console.log("dans parse data");
     search_response = JSON.parse(response);
     console.log("search_response : ");
@@ -1245,20 +1246,21 @@ function parseData(response) {
 
     document.getElementById("result_search_friend").innerHTML = ``;
     for (var i = 0; i < search_response.length; i++) {
-        document.getElementById("result_search_friend").innerHTML += `<button onclick="addThisFriend('${search_response[i].id}','${search_response[i].full_name}');">ajouter</button>`;
-        document.getElementById("result_search_friend").innerHTML += (search_response[i].full_name)
-        document.getElementById("result_search_friend").innerHTML += "</br>";
-
+      document.getElementById("result_search_friend").innerHTML += `
+      <li> ${search_response[i].full_name}
+        <button onclick="addThisFriend('${search_response[i].id}','${search_response[i].full_name}');">ajouter</button>
+      </li>`;
     };
-};
-async function addThisFriend(id, full_name) {
-    let xhr = new XMLHttpRequest();
-    console.log(full_name);
-    let param = `friend_id_to_add=` + id + `&friend_full_name=` + full_name;
-    xhr.open("POST", url + `/add_friend/?` + param, true);
-    xhr.send()
-    await delay(300)
-    //window.location.reload();
-};
+    async function addThisFriend(id, full_name) {
+      let xhr = new XMLHttpRequest();
+      console.log(full_name);
+      let param = `friend_id_to_add=` + id + `&friend_full_name=` + full_name;
+      xhr.open("POST", url + `/add_friend/?` + param, true);
+      xhr.send()
+      await delay(300)
+      //window.location.reload();
+    };
+  };
 </script>
+
 </html>

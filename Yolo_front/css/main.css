@@ -311,7 +311,9 @@ body {
   outline: 0;
   border: 1px #777 solid;
   text-align: center;
-  display: flex;
+  display: grid;
+  grid-template-columns: auto;
+  grid-template-rows: 20% 20%;
   justify-content: center;
   align-items: center;
   width: 30%;
@@ -931,4 +933,4 @@ body {
   -webkit-border-radius: 50% !important;
   -moz-border-radius: 50% !important;
   border-radius: 50% !important
-} 
+}
