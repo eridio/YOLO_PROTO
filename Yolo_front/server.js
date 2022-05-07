@@ -185,7 +185,7 @@
 // });
 const process = require('process')
 process.on('SIGINT', () => {
-  console.info("Interrupted")
+  console.log("Interrupted")
   process.exit(0)
 })
 
