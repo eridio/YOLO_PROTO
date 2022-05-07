@@ -183,6 +183,12 @@
 // http.listen(port, () => {
 //   console.log(`Socket.IO server running at http://localhost:${port}/`);
 // });
+const process = require('process')
+process.on('SIGINT', () => {
+  console.info("Interrupted")
+  process.exit(0)
+})
+
 const express = require('express')
 const app = express();
 
@@ -349,14 +355,14 @@ io.on('connection', (socket) => {
         break;
 
       case "quitWaiting":
-      recipientSocketId = lookForUserSocketId(msg.name);
-      console.log("quit wait :" + msg.name);
-      senderName = lookForUserName(socket.id);
-      if (recipientSocketId != null) {
-        //send the answer to the recipient 
-        io.to(recipientSocketId).emit("quitWaiting", senderName);
-      };
-      break;
+        recipientSocketId = lookForUserSocketId(msg.name);
+        console.log("quit wait :" + msg.name);
+        senderName = lookForUserName(socket.id);
+        if (recipientSocketId != null) {
+          //send the answer to the recipient 
+          io.to(recipientSocketId).emit("quitWaiting", senderName);
+        };
+        break;
 
       case "leave":
 
@@ -386,7 +392,7 @@ io.on('connection', (socket) => {
     }
   });
 
-socket.on("disconnect", function() {
+  socket.on("disconnect", function () {
     console.log("deco deco");
     let index = 0;
     for (index = 0; index < users.length; index++) {
