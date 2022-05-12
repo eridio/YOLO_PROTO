@@ -380,7 +380,22 @@
       divMessage.value = "";
     });
 
+    var entityMap = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
+      '/': '&#x2F;',
+      '`': '&#x60;',
+      '=': '&#x3D;'
+    };
 
+    function escapeHtml(string) {
+      return String(string).replace(/[&<>"'`=\/]/g, function (s) {
+        return entityMap[s];
+      });
+    }
 
     async function deleteMessages(convName) {
       //remove messages and hide the quit button 
@@ -476,13 +491,14 @@
           let message_decrypted = await decrypt_signal_js(event.data, dataChannel);
           console.log("Message decrypted : " + message_decrypted);
           console.log("Message received : " + event.data);
+          let message = escapeHtml(message_decrypted);
           let divMsg = document.getElementById("messages");
           divMsg.innerHTML += `
               <div class="row message-body">
                   <div class="col-sm-12 message-main-receiver">
                       <div class="receiver">
                           <div class="message-text">
-                                  ${message_decrypted}
+                                  ${message}
                                   </div>
                           </div>
                   </div>
@@ -505,12 +521,13 @@
     function displayMessageToSend(dataChannel, message) {
       if (dataChannel.readyState == "open") {
         let divMsg = document.getElementById("messages");
+        let messagePure = escapeHtml(message);
         divMsg.innerHTML += `
         <div class="row message-body">
             <div class="col-sm-12 message-main-sender">
                 <div class="sender">
                     <div class="message-text">
-                    ${message}
+                    ${messagePure}
                     </div>
                 </div>
             </div>
