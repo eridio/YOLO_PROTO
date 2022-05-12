@@ -282,12 +282,58 @@
 
     window.onload = oninit();
     async function oninit() {
+      getyourfriend()
       await delay(1000)
       get_your_name();
       await delay(1000)
       putUserNameOninit()
 
     }
+    
+    function getyourfriend() {
+    let xhr = new XMLHttpRequest();
+    xhr.open("GET", url + `/get_your_friend`, true);
+    xhr.onload = () => {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                console.log(xhr.statusText);
+                parseData_for_getFriends(xhr.responseText);
+            } else {
+                console.error(xhr.statusText);
+            }
+        }
+    };
+    xhr.onerror = () => {
+        console.error(xhr.statusText);
+    };
+    xhr.send(null);
+    }
+
+    let search_response;
+    function parseData_for_getFriends(response) {
+    search_response = JSON.parse(response)
+    console.log("friends : ")
+    console.log(search_response)
+    // for (var i = 0; i < search_response.length; i++) {
+    //     document.getElementById("demo").innerHTML += (search_response[i].full_name)   ;
+    //     document.getElementById("demo").innerHTML += `    <img src="trash-bin.png" onclick="supp_a_friend('${search_response[i].id}');"></img>`;
+        
+    //     document.getElementById("demo").innerHTML += "</br>";
+      
+
+    //     }
+    }
+
+    function compare_friend_with_already_co(server_side_list, friends) {
+      for (let i = 0; friends.length; i++) {
+        for (let j = 0; server_side_list.length; j++){
+          if (friends[i].full_name == server_side_list[j]){
+            console.log("dans le if addUser")
+          addUsers(friends[i].full_name)
+        }
+      }
+    }
+  }
 
     function get_your_name() {
       let xhr = new XMLHttpRequest();
@@ -675,7 +721,7 @@
                           <div class="col-sm-8 col-xs-8 sideBar-name">
                               <span class="name-meta">${user}
                               </span>
-                              <p><button class="offerButton" id="${user}">Make an offer</button></p>
+                              <p><button class="offerButton" id="${user}">Make an offer <img src="/img/offer.png"></button></p>
                           </div>
                       </div>
                   </div>
@@ -734,14 +780,12 @@
     });
 
     socket.on("newUser", user => {
-      addUsers(user);
+      compare_friend_with_already_co(user,search_response);
       //console.log(user);
     });
 
     socket.on("connectedUsers", usersAlreadyConnected => {
-      for (let i = 0; i < usersAlreadyConnected.length; i++) {
-        addUsers(usersAlreadyConnected[i]);
-      }
+      compare_friend_with_already_co(usersAlreadyConnected,search_response);
     });
 
     //'''''''''''''''''''''''''''Caller side''''''''''''''''''''''''''''''''//
@@ -1224,6 +1268,11 @@
 <script>
   let url = "https://yoloooo.com";
 
+  function delay(n) {
+      return new Promise(function (resolve) {
+        setTimeout(resolve, n);
+      });
+    }
 
   window.addEventListener("unload", e => {
     console.log("jme tire");
@@ -1268,7 +1317,8 @@
         <button onclick="addThisFriend('${search_response[i].id}','${search_response[i].full_name}');">ajouter</button>
       </li>`;
     };
-    async function addThisFriend(id, full_name) {
+    };
+  async function addThisFriend(id, full_name) {
       let xhr = new XMLHttpRequest();
       console.log(full_name);
       let param = `friend_id_to_add=` + id + `&friend_full_name=` + full_name;
@@ -1277,7 +1327,6 @@
       await delay(300)
       //window.location.reload();
     };
-  };
 </script>
 
 </html>
