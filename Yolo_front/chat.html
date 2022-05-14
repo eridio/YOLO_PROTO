@@ -658,6 +658,23 @@
             </div >
             `;
     };
+    function displayAddedFriend() {
+      let divModal = document.getElementById("modal");
+      divModal.innerHTML += `<div id="addedFriend" class="modal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <button onclick ="hideAddedFriend();" type="button" class="element-head" aria-label="Close" id ="button_quit_added_friend">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <header class="modalContainer">Friend added successfully!</header>
+            </div >
+            `;
+    };
+
+    function hideAddedFriend() {
+      const div = document.getElementById("addedFriend");
+      div.parentNode.removeChild(div)
+    }
 
 
     function displayOldConv() {
@@ -1315,7 +1332,7 @@
     for (var i = 0; i < friends.length; i++) {
       document.getElementById("result_search_friend").innerHTML += `
       <li> ${friends[i].full_name}
-        <button onclick="addThisFriend('${friends[i].id}','${friends[i].full_name}');">ajouter</button>
+        <button onclick="addThisFriend('${friends[i].id}','${friends[i].full_name}');displayAddedFriend();">ajouter</button>
       </li>`;
     };
   };
