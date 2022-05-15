@@ -281,6 +281,7 @@ body {
 #headingLeft {
   padding: 10px 16px 10px 15px;
   margin: 0 !important;
+
   height: 60px;
   width: 100%;
   background-color: #19768d;
@@ -288,6 +289,46 @@ body {
   display: flex;
   text-align: center;
   font-size: large;
+
+}
+
+
+
+#buttonAddFriend {
+  border-radius: 20%;
+
+}
+
+#buttonAddFriend:hover {
+  background-color: #4aacca;
+  cursor: pointer;
+}
+
+#buttonConv {
+  border-radius: 20%;
+}
+
+#buttonConv:hover {
+  background-color: #4aacca;
+  cursor: pointer;
+}
+
+#buttonLogOut {
+  border-radius: 20%;
+}
+
+#buttonLogOut:hover {
+  background-color: #4aacca;
+  cursor: pointer;
+}
+
+#button {
+  border-radius: 20%;
+}
+
+#button:hover {
+  background-color: #4aacca;
+  cursor: pointer;
 }
 
 #friendName {

@@ -658,23 +658,7 @@
             </div >
             `;
     };
-    function displayAddedFriend() {
-      let divModal = document.getElementById("modal");
-      divModal.innerHTML += `<div id="addedFriend" class="modal">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <button onclick ="hideAddedFriend();" type="button" class="element-head" aria-label="Close" id ="button_quit_added_friend">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-                <header class="modalContainer">Friend added successfully!</header>
-            </div >
-            `;
-    };
 
-    function hideAddedFriend() {
-      const div = document.getElementById("addedFriend");
-      div.parentNode.removeChild(div)
-    }
 
 
     function displayOldConv() {
@@ -723,7 +707,7 @@
             console.log("userlist" + userList[j]);
             let contactList = document.getElementById("friends");
             contactList.innerHTML += `
-              <div class="row sideBar-body" id="${friends[i]}">
+              <div class="row sideBar-body" id="${friends[i].full_name}">
                   <div class="col-sm-3 col-xs-3 sideBar-avatar">
                       <div class="avatar-icon">
                           <img src="img/man-2-512.png">
@@ -732,9 +716,9 @@
                   <div class="col-sm-9 col-xs-9 sideBar-main">
                       <div class="row">
                           <div class="col-sm-8 col-xs-8 sideBar-name">
-                              <span class="name-meta">${friends[i]}
+                              <span class="name-meta">${friends[i].full_name}
                               </span>
-                              <p><button class="offerButton" id="${friends[i]}">Make an offer <img src="/img/offer.png"></button></p>
+                              <p><button class="offerButton" id="${friends[i].fullname}">Make an offer <img src="/img/offer.png"></button></p>
                           </div>
                       </div>
                   </div>
@@ -1035,7 +1019,7 @@
 
     const acceptButton = document.getElementsByClassName("Accept");
     const declineButton = document.getElementsByClassName("acceptButton");
-    const searchButton = document.getElementById("buttonAdd");
+    const searchButton = document.getElementById("buttonAddFriend");
     const convButton = document.getElementById("buttonConv");
 
     document.addEventListener('click', function (e) {
@@ -1090,10 +1074,12 @@
       searchFriend();
       const quitDecline = document.getElementById("button_quit_search");
       quitDecline.addEventListener("click", e => {
+        console.log("je capte le click dans search");
         let search = document.getElementById("addFriendPopUp");
         search.parentNode.removeChild(search);
       });
     });
+
 
 
     convButton.addEventListener("click", e => {
@@ -1142,11 +1128,11 @@
         <div class="side-one">
           <!-- Heading -->
           <div class="row heading" id="headingLeft">
-            <span class="material-symbols-outlined" id="buttonAdd">
-              person_add
-            </span>
-            <span class="material-symbols-outlined">
+            <span class="material-symbols-outlined" id="buttonLogOut">
               logout
+            </span>
+            <span class="material-symbols-outlined" id="buttonAddFriend">
+              person_add
             </span>
             <span class="material-symbols-outlined" id="buttonConv">
               folder_open
@@ -1332,9 +1318,29 @@
     for (var i = 0; i < friends.length; i++) {
       document.getElementById("result_search_friend").innerHTML += `
       <li> ${friends[i].full_name}
-        <button onclick="addThisFriend('${friends[i].id}','${friends[i].full_name}');displayAddedFriend();">ajouter</button>
+        <button onclick="displayAddedFriend();addThisFriend('${friends[i].id}','${friends[i].full_name}');">ajouter</button>
       </li>`;
     };
+  };
+
+  function hideAddedFriend() {
+    const div = document.getElementById("addedFriend");
+    div.parentNode.removeChild(div);
+    window.location.reload();
+  }
+
+
+  function displayAddedFriend() {
+    let divModal = document.getElementById("modal");
+    divModal.innerHTML += `<div id="addedFriend" class="modal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <button onclick ="hideAddedFriend();" type="button" class="element-head" aria-label="Close" id ="button_quit_added_friend">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <header class="modalContainer">Friend added successfully!</header>
+            </div >
+            `;
   };
   async function addThisFriend(id, full_name) {
     let xhr = new XMLHttpRequest();
