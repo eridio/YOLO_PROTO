@@ -134,6 +134,30 @@ pub struct CryptedMessage{
     nonce:String, 
 }
 #[wasm_bindgen]
+#[derive(Serialize,Deserialize,Debug)]
+pub struct JSONToSend{
+    username:String,
+    cipherText: Vec<u8>,
+    key: Vec<u8>,
+    nonce:String, 
+    conversationName:String,
+    date:String
+}
+
+
+#[wasm_bindgen]
+pub fn new_JSONToSend(username:String,cipherText: Vec<u8>,key: Vec<u8>,nonce:String,conversationName:String,date:String)->String{
+    let new_json=JSONToSend{
+        username:username,
+        cipherText:cipherText,
+        key:key,
+        nonce:nonce,
+        conversationName:conversationName,
+        date:date,
+    };
+    return serde_json::to_string(&new_json).unwrap();
+}
+#[wasm_bindgen]
 pub fn new_CryptedMessage(cipherText: Vec<u8>,key: String,nonce:String)->CryptedMessage{
     let crypted_message= CryptedMessage{
         cipherText:cipherText,
