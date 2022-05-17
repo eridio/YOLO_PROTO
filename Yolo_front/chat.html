@@ -431,6 +431,38 @@
       });
     }
 
+    function getMessageFromAPI() {
+    let xhr = new XMLHttpRequest();
+    xhr.open("GET", `https://yoloooo.com/get_messages`, true);
+    xhr.onload = () => {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                console.log(xhr.statusText);
+                parseDataMessage(xhr.responseText);
+            } else {
+                console.error(xhr.statusText);
+            }
+        }
+    };
+    xhr.onerror = () => {
+        console.error(xhr.statusText);
+    };
+    xhr.send(null);
+}
+function parseDataMessage(response) {
+  console.log("MESSAGE RECUP DE L'API")
+  console.log(response)
+    console.log(JSON.parse(response))
+}
+
+async function post_message_to_save(json_to_send){
+let xhr = new XMLHttpRequest();
+xhr.open("POST", `https://yoloooo.com/store_messages`, true);
+xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+xhr.send((json_to_send));
+}
+
+
     async function deleteMessages(convName) {
       //remove messages and hide the quit button 
       let messages = "";
@@ -458,7 +490,11 @@
       divConvo.innerHTML += `<div id="messages"></div>`;
       document.getElementById("logo_title").style.display = "initial";
       let JSONToSave = await send_crypted_message(messages, password, convName, userName);
+      await post_message_to_save(JSONToSave);
+      JSONToSave=JSON.parse(JSONToSave);
       let loadedMessages = await extract_from_JSON(JSONToSave, password);
+      await delay(3000)
+      getMessageFromAPI()
       displayLoadedConversation(loadedMessages);
       return messages;
     };
@@ -718,7 +754,7 @@
                           <div class="col-sm-8 col-xs-8 sideBar-name">
                               <span class="name-meta">${friends[i].full_name}
                               </span>
-                              <p><button class="offerButton" id="${friends[i].fullname}">Make an offer <img src="/img/offer.png"></button></p>
+                              <p><button class="offerButton" id="${friends[i].full_name}">Make an offer <img src="/img/offer.png"></button></p>
                           </div>
                       </div>
                   </div>
