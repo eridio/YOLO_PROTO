@@ -48,7 +48,12 @@ export async function send_crypted_message(message, password, conversationName, 
     let cipher = crypt_aes_gcm_siv(message);
     let key = cipher.get_key();
     let crypted_key = crypt_aes_key(key, password);
-    let jsonToSend = new_JSONToSend(username, cipher.get_text(), crypted_key, cipher.get_nonce(), conversationName, new Date().toLocaleDateString())
+    let date = new Date();
+    let currentDay = date.toLocaleDateString();
+    let currentHour = date.getHours().toString();
+    let currentMinute = date.getMinutes().toString();
+    let currentTime = currentDay + " :" + currentHour + ":" + currentMinute;
+    let jsonToSend = new_JSONToSend(username, cipher.get_text(), crypted_key, cipher.get_nonce(), conversationName, currentTime)
 
     /*
     const xhr = new XMLHttpRequest();
