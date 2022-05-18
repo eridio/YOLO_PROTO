@@ -548,6 +548,8 @@
         // if (event.data == 'init message signal'){
 
         // }
+        console.log("ON EST DANS RECEIVE MESSAGE ALICE")
+        console.log(event.data);
         if (event.data.slice(0, 6) == '{"kty"') {
           localStorage.setItem("bob_pub_key_from_ratchet", event.data)
           console.log("bob_pub_key_from_ratchet" + event.data)
@@ -704,16 +706,16 @@
       getMessageFromAPI();
       let divModal = document.getElementById("modal");
 
-      divModal.innerHTML += `<div class="oldConv" id="oldConvo">
+      divModal.innerHTML += `<div class="oldConv" id="oldConvo" >
                     <button type="button" class="element-head" aria-label="Close" id="button_quit_conv">
                     <span aria-hidden="true">&times;</span>
                     </button>
                         <div class="col-sm-6 ">
-                            <div class="side-one" id="convList">
+                            <div class="side-one" >
                                 <div class="row heading" id="headingLeft">
                                     <h4 class="text-center">Mes conversations</h4>
                                 </div>
-                                <div class="row sideBar">
+                                <div class="row sideBar" id="convList">
                                 </div>
                             </div>
                         </div>
@@ -735,11 +737,19 @@
           for (let element in oldMessagesFromApi[i]) {
             console.log(element);
             if (element == "ciphertext") {
-              cipherText.push(oldMessagesFromApi[i][element].split('[')[1].split(']')[0]);
+              let suite = oldMessagesFromApi[i][element].split('[')[1].split(']')[0].split(',');
+              for (let j = 0; j < suite.length; j++) {
+                cipherText.push(parseInt(suite[j]));
+              }
+
               console.log(cipherText);
             }
             if (element == "key") {
-              key_from_JSON.push(oldMessagesFromApi[i][element].split('[')[1].split(']')[0]);
+              let suite = oldMessagesFromApi[i][element].split('[')[1].split(']')[0].split(',');
+              for (let j = 0; j < suite.length; j++) {
+                key_from_JSON.push(parseInt(suite[j]));
+              }
+
               console.log(key_from_JSON);
             }
             if (element == "nonce") {
@@ -761,14 +771,26 @@
           messagesLoaded.push(new_Json);
         }
         console.log(messagesLoaded);
-        let divConv = document.getElementById("convList");
+
         for (let i = 0; i < messagesLoaded.length; i++) {
-          divConv += `  <div class="col-sm-6 ">
-                            <div class="side-one">
-                                <div class="row sideBar" id="${changeWhiteSpacesIntoUnderscore(messagesLoaded[i].displayName)}">${messagesLoaded[i].displayName}
-                                </div>
-                            </div>
-                        </div>
+          let divConv = document.getElementById("convList");
+          divConv.innerHTML += `               
+              <div class="row sideBar-body" id="${changeWhiteSpacesIntoUnderscore(messagesLoaded[i].displayName)}">
+                  <div class="col-sm-3 col-xs-3 sideBar-avatar">
+                      <div class="avatar-icon">
+                          <img src="img/man-2-512.png">
+                      </div>
+                  </div>
+                  <div class="col-sm-9 col-xs-9 sideBar-main">
+                      <div class="row">
+                          <div class="col-sm-8 col-xs-8 sideBar-name">
+                              <span class="name-meta">${changeWhiteSpacesIntoUnderscore(messagesLoaded[i].displayName)}
+                              </span>
+                              <p><button class="loadOldMessages" id="${changeWhiteSpacesIntoUnderscore(messagesLoaded[i].displayName)}">Load this conv <img src="/img/offer.png"></button></p>
+                          </div>
+                      </div>
+                  </div>
+              </div>
           `;
 
           console.log("message displayed")
@@ -803,7 +825,7 @@
             console.log("userlist" + userList[j]);
             let contactList = document.getElementById("friends");
             contactList.innerHTML += `
-              <div class="row sideBar-body" id="${friends[i].full_name}">
+              <div class="row sideBar-body" id="${changeWhiteSpacesIntoUnderscore(friends[i].full_name)}">
                   <div class="col-sm-3 col-xs-3 sideBar-avatar">
                       <div class="avatar-icon">
                           <img src="img/man-2-512.png">
@@ -812,9 +834,9 @@
                   <div class="col-sm-9 col-xs-9 sideBar-main">
                       <div class="row">
                           <div class="col-sm-8 col-xs-8 sideBar-name">
-                              <span class="name-meta">${friends[i].full_name}
+                              <span class="name-meta">${changeWhiteSpacesIntoUnderscore(friends[i].full_name)}
                               </span>
-                              <p><button class="offerButton" id="${friends[i].full_name}">Make an offer <img src="/img/offer.png"></button></p>
+                              <p><button class="offerButton" id="${changeWhiteSpacesIntoUnderscore(friends[i].full_name)}">Make an offer <img src="/img/offer.png"></button></p>
                           </div>
                       </div>
                   </div>
@@ -1053,12 +1075,15 @@
         console.log(" master ?  " + localStorage.getItem("master_key_bob_part"))
         await bob_init_ratchet_js()
         console.log("bob_pub_key_from_ratchet; " + localStorage.getItem("bob_pub_key_from_ratchet"))
-        dataChannel.send(localStorage.getItem("bob_pub_key_from_ratchet"))
+        // await delay(1000);
+        //dataChannel.send(localStorage.getItem("bob_pub_key_from_ratchet"))
 
 
         console.log("datachannel ? : ");
         console.log(dataChannel);
         //RATCHET INIT COTE BOB -> pub key send
+        dataChannel.send(localStorage.getItem("bob_pub_key_from_ratchet"))
+
         //sendMessage(dataChannel, "");
         messageReceive(dataChannel); //si ca commence par ""
         whatchForClosing(dataChannel, caller);
@@ -1121,7 +1146,7 @@
     document.addEventListener('click', async function (e) {
       if (e.target && e.target.className == 'offerButton') {
         //Caller sending his offer to the callee 
-        socket.emit("request", { type: "offer", name: e.target.id });
+        socket.emit("request", { type: "offer", name: changeUnderscoreIntoWhiteSpaces(e.target.id) });
         console.log(e.target.id);
         //display pop up
         displayWaiting(e.target.id);
@@ -1164,10 +1189,15 @@
       };
 
       if (e.target && e.target.className == 'loadOldMessages') {
+        console.log("loading this conv:" + (e.target.id));
         for (let i = 0; i < messagesLoaded.length; i++) {
-          if (changeUnderscoreIntoWhiteSpaces(e.target.id) == messagesLoaded[i].displayName) {
+          if ((e.target.id) == changeWhiteSpacesIntoUnderscore(messagesLoaded[i].displayName)) {
+            // console.log(JSON.parse(messagesLoaded[i]));
             let loadedMessages = await extract_from_JSON(messagesLoaded[i], password);
             displayLoadedConversation(loadedMessages);
+            let conv = document.getElementById("oldConvo");
+            conv.parentNode.removeChild(conv);
+            document.getElementById("logo_title").style.display = "none";
           }
         }
       }

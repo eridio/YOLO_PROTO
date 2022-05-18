@@ -64,7 +64,8 @@ export async function send_crypted_message(message, password, conversationName, 
     return jsonToSend;
 };
 
-export function extract_from_JSON(JSON, password) {
+export async function extract_from_JSON(JSON, password) {
+    await init();
     let cryptedMessage = new_CryptedMessage(JSON.cipherText, decrypt_aes_key(JSON.key, password), JSON.nonce);
     let plainText = decrypt_aes_gcm_siv(cryptedMessage);
     console.log("your messages : " + plainText);
