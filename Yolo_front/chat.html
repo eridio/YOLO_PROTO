@@ -1082,6 +1082,9 @@
         console.log("datachannel ? : ");
         console.log(dataChannel);
         //RATCHET INIT COTE BOB -> pub key send
+        console.log("BOB DATA CHANNEL READY ?")
+        console.log(dataChannel.readyState)
+        await delay(2000)
         dataChannel.send(localStorage.getItem("bob_pub_key_from_ratchet"))
 
         //sendMessage(dataChannel, "");
