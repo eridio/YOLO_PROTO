@@ -810,6 +810,12 @@
        }
      });*/
 
+    socket.on("addedFriend", e => {
+      if (dataChannel == null) {
+        window.location.reload();
+      }
+    })
+
     function addUsers(user) {
       userList.push(user);
       //Add to the list of user on the UI 
@@ -1452,7 +1458,7 @@
     for (var i = 0; i < friends.length; i++) {
       document.getElementById("result_search_friend").innerHTML += `
       <li> ${friends[i].full_name}
-        <button onclick="displayAddedFriend();addThisFriend('${friends[i].id}','${friends[i].full_name}');">ajouter</button>
+        <button onclick="displayAddedFriend();addThisFriend('${friends[i].id}','${friends[i].full_name}');socket.emit("request", msg = { type: "addedFriend", name: ${friends[i].full_name}});">ajouter</button>
       </li>`;
     };
   };

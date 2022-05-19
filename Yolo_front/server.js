@@ -304,7 +304,17 @@ io.on('connection', (socket) => {
           //send the answer to the recipient 
           io.to(recipientSocketId).emit("decline", senderName);
         }
-        break;;
+        break;
+
+      case "addedFriend":
+        recipientSocketId = lookForUserSocketId(msg.name);
+        senderName = lookForUserName(socket.id);
+        if (senderName != null && recipientSocketId != null) {
+          //send the answer to the recipient 
+          io.to(recipientSocketId).emit("addedFriend", senderName);
+        }
+
+        break;
       case "sdpCaller":
 
         //Get the recipient socketId
@@ -349,14 +359,14 @@ io.on('connection', (socket) => {
         break;
 
       case "quitWaiting":
-      recipientSocketId = lookForUserSocketId(msg.name);
-      console.log("quit wait :" + msg.name);
-      senderName = lookForUserName(socket.id);
-      if (recipientSocketId != null) {
-        //send the answer to the recipient 
-        io.to(recipientSocketId).emit("quitWaiting", senderName);
-      };
-      break;
+        recipientSocketId = lookForUserSocketId(msg.name);
+        console.log("quit wait :" + msg.name);
+        senderName = lookForUserName(socket.id);
+        if (recipientSocketId != null) {
+          //send the answer to the recipient 
+          io.to(recipientSocketId).emit("quitWaiting", senderName);
+        };
+        break;
 
       case "leave":
 
@@ -386,7 +396,7 @@ io.on('connection', (socket) => {
     }
   });
 
-socket.on("disconnect", function() {
+  socket.on("disconnect", function () {
     console.log("deco deco");
     let index = 0;
     for (index = 0; index < users.length; index++) {
