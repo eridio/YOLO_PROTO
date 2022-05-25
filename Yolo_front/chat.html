@@ -22,6 +22,8 @@
     // import init from './pkg/helloword_bg.wasm';
     import { send_crypted_message, extract_from_JSON } from "./js/index.js";
     import init, { key_init_alice, key_init_bob, calculate_master_key_alice, calculate_master_key_bob, alice_init_ratchet, bob_init_ratchet, decrypt, send } from './pkg/helloworld.js'
+    //var password = sessionStorage.getItem("hash");
+
     localStorage.clear();
     async function run() {
       await init()
@@ -206,6 +208,9 @@
 
     async function send_signal_js(message, senderName, dataChannel) {
       await init()
+      if (senderName != " ") {
+        message = senderName + " : " + message;
+      }
       let ratchet;
       console.log("AVANT LE IF")
       if (dataChannelList.length > 0) {
@@ -382,7 +387,9 @@
     var dataChannel;
     var dataChannelList = new Array();
 
-    var password = "coucou";
+    var password = "coucou"; // A changer avec un hash du mdp renvoyer par le serv ou par la value du jwt
+    // var password = localStorage.getItem("hash");
+    console.log(password);
     //put the name of the client in the front 
     async function putUserNameOninit() {
       let divHeader = document.getElementById("friendName");
@@ -584,7 +591,7 @@
               if (dataChannelList[i].dataChannel != dataChannel) {
                 console.log("POUR DELAY MEsSAGE:")
                 console.log(dataChannelList[i].dataChannel)
-                sendMessage(dataChannelList[i].dataChannel, message_decrypted, "tekas")
+                sendMessage(dataChannelList[i].dataChannel, message_decrypted, " ")//dataChannelList[i].dataChannel.label)
                 //dataChannelList[i].dataChannel.send(message_decrypted);
               }
             }
@@ -822,15 +829,14 @@
       console.log("userlist : " + userList);
       console.log("friendList : " + friends);
       for (let i = 0; i < friends.length; i++) {
-        for (let j = 0; j < userList.length; j++) {
-          if (friends[i].full_name == userList[j]) {
-            console.log("dans le if addUser")
-            console.log("indice friends" + i);
-            console.log("indice userlist" + j);
-            console.log("friends" + friends[i]);
-            console.log("userlist" + userList[j]);
-            let contactList = document.getElementById("friends");
-            contactList.innerHTML += `
+        if (friends[i].full_name == user) {
+          console.log("dans le if addUser")
+          console.log("indice friends" + i);
+          // console.log("indice userlist" + j);
+          console.log("friends" + friends[i]);
+          //console.log("userlist" + userList[j]);
+          let contactList = document.getElementById("friends");
+          contactList.innerHTML += `
               <div class="row sideBar-body" id="${changeWhiteSpacesIntoUnderscore(friends[i].full_name)}">
                   <div class="col-sm-3 col-xs-3 sideBar-avatar">
                       <div class="avatar-icon">
@@ -848,14 +854,16 @@
                   </div>
               </div>
               `;
-          }
         }
       }
+
 
 
       //   console.log(contactList);
 
     };
+
+
     function deleteUser(user) {
       for (let i = 0; i < userList.length; i++) {
 
@@ -926,7 +934,7 @@
 
       //Creating the caller peer connection and his sdp
 
-      pcCaller = new RTCPeerConnection();
+      pcCaller = new RTCPeerConnection(options);
       dataChannel = pcCaller.createDataChannel(receiverName);
       let dataChannelInfo = {
         dataChannel: dataChannel,
@@ -1068,7 +1076,7 @@
     //receiving a peerConnection offer from the caller (send by the signaling server)
     socket.on("pcOffer", async (callerSdp, dc) => {
       //creating the callee peer connection
-      pcCallee = new RTCPeerConnection();
+      pcCallee = new RTCPeerConnection(options);
       // dataChannel = dc;
       // console.log(dc);
       pcCallee.addEventListener("datachannel", async ev => {
@@ -1090,7 +1098,7 @@
         //RATCHET INIT COTE BOB -> pub key send
         console.log("BOB DATA CHANNEL READY ?")
         console.log(dataChannel.readyState)
-        await delay(2000)
+        await delay(2500)
         dataChannel.send(localStorage.getItem("bob_pub_key_from_ratchet"))
 
         //sendMessage(dataChannel, "");
@@ -1461,7 +1469,7 @@
     for (var i = 0; i < friends.length; i++) {
       document.getElementById("result_search_friend").innerHTML += `
       <li> ${friends[i].full_name}
-        <button onclick="displayAddedFriend();addThisFriend('${friends[i].id}','${friends[i].full_name}');socket.emit("request", msg = { type: "addedFriend", name: ${friends[i].full_name}});">ajouter</button>
+        <button onclick="displayAddedFriend();addThisFriend('${friends[i].id}','${friends[i].full_name}');">ajouter</button>
       </li>`;
     };
   };
